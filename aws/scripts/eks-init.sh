@@ -52,13 +52,14 @@ export EXP_EKS_ADD_ROLES=true
 export AWS_SSH_KEY_NAME=$ssh_key_name
 export AWS_ACCESS_KEY_ID=$aws_access_key_id
 export AWS_SECRET_ACCESS_KEY=$aws_secret_access_key
-export AWS_REGION=ap-northeast-2 # Asia Pacific (Seoul)
+export AWS_REGION=$aws_region
 export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-as-profile)
 
-export KUBERNETES_VERSION=v1.18.15
-export WORKER_MACHINE_COUNT=2
-# export AWS_CONTROL_PLANE_MACHINE_TYPE=t3.medium
-export AWS_NODE_MACHINE_TYPE=t3.small
+export KUBERNETES_VERSION=$kubernetes_version
+# export CONTROL_PLANE_MACHINE_COUNT=$control_plane_machine_count
+export WORKER_MACHINE_COUNT=$worker_machine_count
+# export AWS_CONTROL_PLANE_MACHINE_TYPE=$aws_control_plane_machine_type
+export AWS_NODE_MACHINE_TYPE=$aws_node_machine_type
 msg "✅ Complete\n---"
 
 msg "${YELLOW}Initialize Management Cluster...${NOFORMAT}"

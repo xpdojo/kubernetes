@@ -1,6 +1,6 @@
 # EKS 기반의 workload cluster 생성하기
 
-- [Enabling EKS Support](https://cluster-api-aws.sigs.k8s.io/topics/eks/enabling.html)
+## [Enabling EKS Support](https://cluster-api-aws.sigs.k8s.io/topics/eks/enabling.html)
 
 ```bash
 export EXP_EKS=true
@@ -8,7 +8,7 @@ export EXP_EKS_IAM=true
 export EXP_EKS_ADD_ROLES=true
 ```
 
-- [CloudFormation](https://docs.aws.amazon.com/ko_kr/AWSCloudFormation/latest/UserGuide/Welcome.html) 스택 생성
+## [CloudFormation](https://docs.aws.amazon.com/ko_kr/AWSCloudFormation/latest/UserGuide/Welcome.html) 스택 생성
 
 ```bash
 clusterawsadm bootstrap iam \
@@ -52,6 +52,8 @@ kubectl get providers -A
 # capa-system                     infrastructure-aws      InfrastructureProvider   aws           v0.6.4    
 # capi-system                     cluster-api             CoreProvider             cluster-api   v0.3.14 
 ```
+
+## 클러스터 생성
 
 ```bash
 clusterctl config cluster capi-eks \
@@ -131,13 +133,26 @@ kubectl get ev
 
 ![creating-eks-cluster](images/creating-eks-cluster.png)
 
+- 완료까지 대략 20-30분 걸렸습니다.
+
 ```bash
-clusterctl describe cluster capi-eks
+clusterctl describe cluster capa-test
+# NAME                                                               READY  SEVERITY  REASON  SINCE  MESSAGE                                                           
+# /capa-test                                                         True                     22m                                                                      
+# ├─ClusterInfrastructure - AWSManagedCluster/capa-test                                                                                                              
+# ├─ControlPlane - AWSManagedControlPlane/capa-test-control-plane  True                     22m                                                                      
+# └─Workers                                                                                                                                                          
+#   └─MachineDeployment/capa-test-md-0                                                                                                                               
+#     └─2 Machines...                                              True                     18m 
 ```
 
 ![ready-eks](images/ready-eks.png)
 
-![eks-workloads](images/eks-workloads.png)
+![eks-nodes](images/ready-eks-nodes.png)
+
+![eks-workloads](images/ready-eks-workloads.png)
+
+- API 리소스가 EC2 기반 클러스터와 약간 다릅니다.
 
 ```bash
 kubectl api-resources | grep cluster.x-k8s.io
@@ -146,6 +161,7 @@ kubectl api-resources | grep cluster.x-k8s.io
 # clusterresourcesets                            addons.cluster.x-k8s.io/v1alpha3           true         ClusterResourceSet
 # eksconfigs                                     bootstrap.cluster.x-k8s.io/v1alpha3        true         EKSConfig
 # eksconfigtemplates                             bootstrap.cluster.x-k8s.io/v1alpha3        true         EKSConfigTemplate
+# clusterissuers                                 cert-manager.io/v1beta1                    false        ClusterIssuer
 # clusters                          cl           cluster.x-k8s.io/v1alpha3                  true         Cluster
 # machinedeployments                md           cluster.x-k8s.io/v1alpha3                  true         MachineDeployment
 # machinehealthchecks               mhc,mhcs     cluster.x-k8s.io/v1alpha3                  true         MachineHealthCheck
@@ -162,62 +178,66 @@ kubectl api-resources | grep cluster.x-k8s.io
 # awsmanagedmachinepools                         infrastructure.cluster.x-k8s.io/v1alpha3   true         AWSManagedMachinePool
 ```
 
+- [EKS 컨트롤 플레인에 관한 글](https://docs.rafay.co/clusters/provision/eks/control_plane/)
+
 ```bash
 kubectl get awsmanagedclusters -A
-# NAMESPACE   NAME           CLUSTER        READY   VPC
-# default     capi-aws-eks   capi-aws-eks   true
+# NAMESPACE   NAME        CLUSTER     READY   VPC
+# default     capa-test   capa-test   true
 
+# EC2 기반의 클러스터는 이 부분이 kubeadmcontrolplane 입니다.
+# kubectl get awsmcp
 kubectl get awsmanagedcontrolplanes
-# NAME                         CLUSTER        READY   VPC                     BASTION IP
-# capi-aws-eks-control-plane   capi-aws-eks   true    vpc-0142574c56ec48969
+# NAME                      CLUSTER     READY   VPC                     BASTION IP
+# capa-test-control-plane   capa-test   true    vpc-0e38124b954f94fa1
 
 kubectl get machinedeployments -A
-# NAMESPACE   NAME                PHASE     REPLICAS   READY   UPDATED   UNAVAILABLE
-# default     capi-aws-eks-md-0   Running   1          1       1
+# NAMESPACE   NAME             PHASE     REPLICAS   READY   UPDATED   UNAVAILABLE
+# default     capa-test-md-0   Running   2          2       2
 ```
 
 ### kubeconfig
 
-- https://cluster-api-aws.sigs.k8s.io/topics/eks/creating-a-cluster.html#kubeconfig
+- [EKS Cluster kubeconfig](https://cluster-api-aws.sigs.k8s.io/topics/eks/creating-a-cluster.html#kubeconfig)
 
 ```bash
-kubectl --namespace=default get secret capi-eks-kubeconfig \
+kubectl --namespace=default get secret capa-test-kubeconfig \
   -o jsonpath={.data.value} | base64 --decode \
-  > capi-aws/eks.kubeconfig
+  > aws/eks.kubeconfig
 ```
 
 ```bash
-kubectl --kubeconfig=capi-aws/eks.kubeconfig get nodes --show-labels
-# NAME                                             STATUS   ROLES    AGE   VERSION              LABELS
-# ip-10-0-119-49.ap-northeast-2.compute.internal   Ready    <none>   21m   v1.18.9-eks-d1db3c   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/instance-type=t3.small,beta.kubernetes.io/os=linux,failure-domain.beta.kubernetes.io/region=ap-northeast-2,failure-domain.beta.kubernetes.io/zone=ap-northeast-2a,kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-119-49.ap-northeast-2.compute.internal,kubernetes.io/os=linux,node.kubernetes.io/instance-type=t3.small,topology.kubernetes.io/region=ap-northeast-2,topology.kubernetes.io/zone=ap-northeast-2a
-kubectl --kubeconfig=capi-aws/eks.kubeconfig get pods -A -o wide
-# NAMESPACE     NAME                       READY   STATUS    RESTARTS   AGE   IP            NODE                                             NOMINATED NODE   READINESS GATES
-# kube-system   aws-node-c7grx             1/1     Running   0          20m   10.0.119.49   ip-10-0-119-49.ap-northeast-2.compute.internal   <none>           <none>
-# kube-system   coredns-6fb4cf484b-w9krz   1/1     Running   0          26m   10.0.99.233   ip-10-0-119-49.ap-northeast-2.compute.internal   <none>           <none>
-# kube-system   coredns-6fb4cf484b-x8r8m   1/1     Running   0          26m   10.0.95.191   ip-10-0-119-49.ap-northeast-2.compute.internal   <none>           <none>
-# kube-system   kube-proxy-8m5fv           1/1     Running   0          20m   10.0.119.49   ip-10-0-119-49.ap-northeast-2.compute.internal   <none>           <none>
+kubectl --kubeconfig=aws/eks.kubeconfig config current-context
+# default_capa-test-control-plane-capi-admin@default_capa-test-control-plane
+
+kubectl --kubeconfig=aws/eks.kubeconfig get nodes --show-labels
+# NAME                                              STATUS   ROLES    AGE   VERSION              LABELS
+# ip-10-0-100-250.ap-northeast-2.compute.internal   Ready    <none>   23m   v1.18.9-eks-d1db3c   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/instance-type=t3.small,beta.kubernetes.io/os=linux,failure-domain.beta.kubernetes.io/region=ap-northeast-2,failure-domain.beta.kubernetes.io/zone=ap-northeast-2a,kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-100-250.ap-northeast-2.compute.internal,kubernetes.io/os=linux,node.kubernetes.io/instance-type=t3.small,topology.kubernetes.io/region=ap-northeast-2,topology.kubernetes.io/zone=ap-northeast-2a
+# ip-10-0-107-253.ap-northeast-2.compute.internal   Ready    <none>   23m   v1.18.9-eks-d1db3c   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/instance-type=t3.small,beta.kubernetes.io/os=linux,failure-domain.beta.kubernetes.io/region=ap-northeast-2,failure-domain.beta.kubernetes.io/zone=ap-northeast-2a,kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-107-253.ap-northeast-2.compute.internal,kubernetes.io/os=linux,node.kubernetes.io/instance-type=t3.small,topology.kubernetes.io/region=ap-northeast-2,topology.kubernetes.io/zone=ap-northeast-2a
+
+kubectl --kubeconfig=aws/eks.kubeconfig get pods -A -o wide
+# NAMESPACE     NAME                       READY   STATUS    RESTARTS   AGE   IP             NODE                                              NOMINATED NODE   READINESS GATES
+# kube-system   aws-node-dmctn             1/1     Running   0          24m   10.0.100.250   ip-10-0-100-250.ap-northeast-2.compute.internal   <none>           <none>
+# kube-system   aws-node-pbjlc             1/1     Running   0          24m   10.0.107.253   ip-10-0-107-253.ap-northeast-2.compute.internal   <none>           <none>
+# kube-system   coredns-6fb4cf484b-9csw4   1/1     Running   0          30m   10.0.100.157   ip-10-0-100-250.ap-northeast-2.compute.internal   <none>           <none>
+# kube-system   coredns-6fb4cf484b-fk4nb   1/1     Running   0          30m   10.0.122.202   ip-10-0-100-250.ap-northeast-2.compute.internal   <none>           <none>
+# kube-system   kube-proxy-pwdrm           1/1     Running   0          24m   10.0.107.253   ip-10-0-107-253.ap-northeast-2.compute.internal   <none>           <none>
+# kube-system   kube-proxy-rqncp           1/1     Running   0          24m   10.0.100.250   ip-10-0-100-250.ap-northeast-2.compute.internal   <none>           <none>
 ```
 
-### CNI 솔루션 배포
+### CNI
 
-```bash
-kubectl --kubeconfig=capi-aws/eks.kubeconfig \
-  apply -f https://docs.projectcalico.org/v3.15/manifests/calico.yaml
-
-kubectl --kubeconfig=capi-aws/eks.kubeconfig get nodes
-# NAME                                              STATUS   ROLES    AGE    VERSION
-# ip-10-0-123-138.ap-northeast-2.compute.internal   Ready    <none>   101m   v1.18.15
-# ip-10-0-127-50.ap-northeast-2.compute.internal    Ready    <none>   101m   v1.18.15
-# ip-10-0-220-242.ap-northeast-2.compute.internal   Ready    master   103m   v1.18.15
-```
+- [별도로 배포할 필요가 없습니다.](https://docs.aws.amazon.com/eks/latest/userguide/pod-networking.html)
+- [AWS VPC CNI](https://github.com/aws/amazon-vpc-cni-k8s)
+- Amazon EKS supports native VPC networking with the Amazon VPC Container Network Interface (CNI) plugin for Kubernetes.
 
 ### 컨트롤 플레인 로깅
 
-- https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/control-plane-logs.html
+- [EKS Control Plane Logging](https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/control-plane-logs.html)
 
 ## Clean up
 
-- 5분도 안걸렸습니다.
+- 제거는 5분도 안걸렸습니다.
 
 ```bash
 kubectl delete cluster capi-eks
@@ -234,30 +254,4 @@ clusterctl delete --control-plane aws-eks --bootstrap aws-eks
 
 ```bash
 kind delete cluster --name clusterapi
-```
-
-## 트러블슈팅
-
-- [문서](https://cluster-api-aws.sigs.k8s.io/topics/troubleshooting.html)
-
-```bash
-export EXP_EKS=true
-export EXP_EKS_IAM=true
-export EXP_EKS_ADD_ROLES=true
-```
-
-```bash
-# 위 환경변수들을 설정하지 않고 EKS 클러스터를 생성하면 워커 노드가 생성되지 않습니다.
-kubectl get events
-# ...
-# 36m         Warning   readOnlySysFS                                  node/clusterapi-worker                          CRI error: /sys is read-only: cannot modify conntrack limits, problems may arise later (If running Docker, see docker issue #24000)
-
-clusterctl describe cluster capi-eks
-# NAME                                                              READY  SEVERITY  REASON                           SINCE  MESSAGE
-# /capi-eks                                                         False  Info      WaitingForInfrastructure         11m
-# ├─ClusterInfrastructure - AWSManagedCluster/capi-eks
-# ├─ControlPlane - AWSManagedControlPlane/capi-eks-control-plane  True                                              11m
-# └─Workers
-#   └─MachineDeployment/capi-eks-md-0
-#     └─2 Machines...                                             False  Info      WaitingForClusterInfrastructure  25m    See capi-eks-md-0-667944fb9b-4lqxd, capi-eks-md-0-667944fb9b-xksbx
 ```

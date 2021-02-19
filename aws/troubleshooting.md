@@ -1,5 +1,10 @@
 # AWS 테스트 환경 트러블슈팅
 
+- [공식 문서](https://cluster-api-aws.sigs.k8s.io/topics/troubleshooting.html)
+- [Amazon EKS에 대한 kubelet 또는 CNI 플러그인 문제는 어떻게 해결합니까?](https://aws.amazon.com/ko/premiumsupport/knowledge-center/eks-cni-plugin-troubleshooting/)
+- [EKS FAQ](https://aws.amazon.com/ko/eks/faqs/)
+- [EKS Best Practice](https://aws.github.io/aws-eks-best-practices/reliability/docs/controlplane/)
+
 ## 환경 변수
 
 ```bash
@@ -65,6 +70,16 @@ kubectl describe machinedeployments capa-test-md-0
 # Normal   SuccessfulCreate  23m                 machinedeployment-controller  Created MachineSet "capa-test-md-0-d88b79d65"
 ```
 
+## EKS Machine 생성 오류
+
+- credential 재생성 후 클러스터 재생성
+
+```bash
+kubectl get events
+# 31s         Warning   FailedCreate                                   awsmachine/capa-test-md-0-wt5kx                  (combined from similar events): Failed to create instance: failed to run instance: Blocked: This account is currently blocked and not recognized as a valid account. Please contact aws-verification@amazon.com if you have questions.
+#             status code: 400, request id: a9c64ae3-d3a8-4b06-989c-a687f53af383
+```
+
 ## EKS 클러스터 생성 시 오류
 
 - 해결 못함
@@ -74,14 +89,4 @@ kubectl describe machinedeployments capa-test-md-0
 ```bash
 kubeclt get events
 # 36m         Warning   readOnlySysFS                                  node/clusterapi-worker                          CRI error: /sys is read-only: cannot modify conntrack limits, problems may arise later (If running Docker, see docker issue #24000)
-```
-
-## EKS Machine 생성 오류
-
-- 해결 못함
-
-```bash
-kubectl get events
-# 31s         Warning   FailedCreate                                   awsmachine/capa-test-md-0-wt5kx                  (combined from similar events): Failed to create instance: failed to run instance: Blocked: This account is currently blocked and not recognized as a valid account. Please contact aws-verification@amazon.com if you have questions.
-#             status code: 400, request id: a9c64ae3-d3a8-4b06-989c-a687f53af383
 ```

@@ -22,6 +22,9 @@ clean-eks:
 aws-init:
 	@./aws/scripts/capi-aws-init.sh
 	
+aws-cni:
+	@./aws/scripts/capi-aws-cni.sh
+
 aws-status:
 	clusterctl describe cluster $(aws_cluster_name)
 
@@ -30,6 +33,3 @@ eks-init:
 
 eks-status:
 	clusterctl describe cluster $(aws_cluster_name)
-
-aws-cni:
-	@./aws/scripts/capi-aws-cni.sh

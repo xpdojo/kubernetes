@@ -2,49 +2,43 @@
 
 - EKS 기반의 클러스터 생성하기 👉 [EKS.README.md](EKS.README.md)
 
-## [`aws`](https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/install-cliv2-mac.html)
+## `aws`
+
+### [Linux](https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/install-cliv2-linux.html)
 
 ```bash
+cd /tmp
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+```
+
+### [macOS](https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/install-cliv2-mac.html)
+
+```bash
+/tmp
 curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
 sudo installer -pkg AWSCLIV2.pkg -target /
 aws --version
 # aws-cli/2.1.26 Python/3.7.4 Darwin/19.6.0 exe/x86_64 prompt/off
 ```
 
-## 필수 Configuration
+### `clusterawsadm`
 
-- https://cluster-api.sigs.k8s.io/user/quick-start.html#initialization-for-common-providers
-- [AWS IAM resources](https://cluster-api-aws.sigs.k8s.io/topics/using-clusterawsadm-to-fulfill-prerequisites.html#with-clusterawsadm)
-- [AWS Security Credentials](https://console.aws.amazon.com/iam/home?#/security_credentials) - Access Key를 생성하는 페이지입니다.
+- [kubernetes-sigs/cluster-api-provider-aws](https://github.com/kubernetes-sigs/cluster-api-provider-aws/releases)
 
 ```bash
-clusterctl config cluster foo -i aws:v0.6.4 --list-variables
-# Variables:
-#   - AWS_CONTROL_PLANE_MACHINE_TYPE
-#   - AWS_NODE_MACHINE_TYPE
-#   - AWS_REGION
-#   - AWS_SSH_KEY_NAME
-#   - CLUSTER_NAME
-#   - CONTROL_PLANE_MACHINE_COUNT
-#   - KUBERNETES_VERSION
-#   - WORKER_MACHINE_COUNT
-
-# https://aws.amazon.com/ec2/instance-types/
-export KUBERNETES_VERSION=v1.18.15
-export CONTROL_PLANE_MACHINE_COUNT=1
-export WORKER_MACHINE_COUNT=2
-export AWS_CONTROL_PLANE_MACHINE_TYPE=t3.medium
-export AWS_NODE_MACHINE_TYPE=t3.small
-
-export AWS_ACCESS_KEY_ID=<aws-access-key-id>
-export AWS_SECRET_ACCESS_KEY=<aws-secret-access-key>
-export AWS_REGION=<region>
-export AWS_SESSION_TOKEN=<session-token> # If you are using Multi-Factor Auth(MFA).
+/tmp
+curl -L https://github.com/kubernetes-sigs/cluster-api-provider-aws/releases/download/v0.6.4/clusterawsadm-$(uname)-amd64 -o clusterawsadm
+chmod +x clusterawsadm
+sudo mv ./clusterawsadm /usr/local/bin/clusterawsadm
+clusterawsadm version
 ```
 
 ### [SSH Key pair 생성](https://cluster-api-aws.sigs.k8s.io/topics/using-clusterawsadm-to-fulfill-prerequisites.html#create-a-new-key-pair)
 
-> 아래처럼 aws 명령어로 지정한 config는 clusterctl에서 읽지 못합니다.
+> `.pem` 파일을 생성하기 위해 `aws configure`를 실행합니다.
+> 다만 `aws configure`로 지정한 설정은 `clusterctl`에서 읽지 못합니다.
 
 ```bash
 aws configure
@@ -74,9 +68,9 @@ sudo ssh-keygen -y -f $HOME/.ssh/aws-provider.pem > $HOME/.ssh/aws-provider.pub
 ```
 
 ```bash
-aws ec2 import-key-pair \
-  --key-name aws-provider \
-  --public-key-material fileb://$HOME/.ssh/aws-provider.pub
+# aws ec2 import-key-pair \
+#   --key-name aws-provider \
+#   --public-key-material fileb://$HOME/.ssh/aws-provider.pub
 
 export AWS_SSH_KEY_NAME=aws-provider
 ```
@@ -84,15 +78,35 @@ export AWS_SSH_KEY_NAME=aws-provider
 - [콘솔에서 Key pair 확인하기](https://ap-northeast-2.console.aws.amazon.com/ec2/v2/home?region=ap-northeast-2#KeyPairs:)
 - [모든 AWS 리전에 대해 단일 SSH 키 페어를 사용하려면 어떻게 해야 합니까?](https://aws.amazon.com/ko/premiumsupport/knowledge-center/ec2-ssh-key-pair-regions/)
 
-### `clusterawsadm`
+## 필수 Configuration
 
-- [kubernetes-sigs/cluster-api-provider-aws](https://github.com/kubernetes-sigs/cluster-api-provider-aws/releases)
+- [Initialization for common providers](https://cluster-api.sigs.k8s.io/user/quick-start.html#initialization-for-common-providers)
+- [AWS IAM resources](https://cluster-api-aws.sigs.k8s.io/topics/using-clusterawsadm-to-fulfill-prerequisites.html#with-clusterawsadm)
+- [AWS Security Credentials](https://console.aws.amazon.com/iam/home?#/security_credentials) - Access Key를 생성하는 페이지입니다.
 
 ```bash
-curl -L https://github.com/kubernetes-sigs/cluster-api-provider-aws/releases/download/v0.6.4/clusterawsadm-$(uname)-amd64 -o clusterawsadm
-chmod +x clusterawsadm
-mv ./clusterawsadm /usr/local/bin/clusterawsadm
-clusterawsadm version
+clusterctl config cluster foo -i aws:v0.6.4 --list-variables
+# Variables:
+#   - AWS_CONTROL_PLANE_MACHINE_TYPE
+#   - AWS_NODE_MACHINE_TYPE
+#   - AWS_REGION
+#   - AWS_SSH_KEY_NAME
+#   - CLUSTER_NAME
+#   - CONTROL_PLANE_MACHINE_COUNT
+#   - KUBERNETES_VERSION
+#   - WORKER_MACHINE_COUNT
+
+# https://aws.amazon.com/ec2/instance-types/
+export KUBERNETES_VERSION=v1.18.15
+export CONTROL_PLANE_MACHINE_COUNT=1
+export WORKER_MACHINE_COUNT=2
+export AWS_CONTROL_PLANE_MACHINE_TYPE=t3.medium
+export AWS_NODE_MACHINE_TYPE=t3.small
+
+export AWS_ACCESS_KEY_ID=<aws-access-key-id>
+export AWS_SECRET_ACCESS_KEY=<aws-secret-access-key>
+export AWS_REGION=<region>
+export AWS_SESSION_TOKEN=<session-token> # If you are using Multi-Factor Auth(MFA).
 ```
 
 ### base64 인코딩 방식의 credentials 설정
@@ -103,7 +117,7 @@ clusterawsadm version
 export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-as-profile)
 ```
 
-## EC2 기반의 workload cluster 생성하기
+## workload cluster 생성
 
 ### Initialize the management cluster
 
@@ -155,13 +169,13 @@ clusterctl config cluster capi-aws > capi-aws.yaml
 # VPC Dashboard: Security Group, EIP, ELB, VPC, NAT Gateway, Subnets, Route Tables, Internet Gateways, Network ACL
 # EC2 Dashboard: Instances -> Volume
 sudo kubectl apply -f capi-aws.yaml
-# NAME                                                           READY  SEVERITY  REASON                   SINCE  MESSAGE                                                         
-# /capi-aws                                                      False  Info      WaitingForKubeadmInit    4m7s                                                                   
-# ├─ClusterInfrastructure - AWSCluster/capi-aws                True                                      4m29s                                                                  
-# ├─ControlPlane - KubeadmControlPlane/capi-aws-control-plane  False  Info      WaitingForKubeadmInit    4m7s                                                                   
-# │ └─Machine/capi-aws-control-plane-lbhzg                    True                                      4m7s                                                                   
-# └─Workers                                                                                                                                                                     
-#   └─MachineDeployment/capi-aws-md-0                                                                                                                                           
+# NAME                                                           READY  SEVERITY  REASON                   SINCE  MESSAGE
+# /capi-aws                                                      False  Info      WaitingForKubeadmInit    4m7s
+# ├─ClusterInfrastructure - AWSCluster/capi-aws                True                                      4m29s
+# ├─ControlPlane - KubeadmControlPlane/capi-aws-control-plane  False  Info      WaitingForKubeadmInit    4m7s
+# │ └─Machine/capi-aws-control-plane-lbhzg                    True                                      4m7s
+# └─Workers
+#   └─MachineDeployment/capi-aws-md-0
 #     └─2 Machines...
 
 # 약 15분 뒤...
