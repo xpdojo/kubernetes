@@ -56,26 +56,29 @@ kubectl get providers -A
 ## 클러스터 생성
 
 ```bash
-clusterctl config cluster capi-eks \
-  --flavor eks \
-  --kubernetes-version v1.18.15 \
-  --worker-machine-count=2 \
-  > capi-aws/capi-eks.yaml
+export KUBERNETES_VERSION=$kubernetes_version
+export WORKER_MACHINE_COUNT=$worker_machine_count
+export AWS_NODE_MACHINE_TYPE=$aws_node_machine_type
 
-# Error: failed to get repository client for the InfrastructureProvider with name aws: error creating the GitHub repository client: failed to get GitHub latest version: failed to get the list of versions: rate limit for github api has been reached. Please wait one hour or get a personal API tokens a assign it to the GITHUB_TOKEN environment variable
+clusterctl config cluster capa-test \
+  --flavor eks \
+  > aws/scripts/eks.yaml
 ```
 
 ```bash
-sudo kubectl apply -f capi-aws/capi-eks.yaml
-# cluster.cluster.x-k8s.io/capi-eks created
-# awsmanagedcluster.infrastructure.cluster.x-k8s.io/capi-eks created
-# awsmanagedcontrolplane.controlplane.cluster.x-k8s.io/capi-eks-control-plane created
-# machinedeployment.cluster.x-k8s.io/capi-eks-md-0 created
-# awsmachinetemplate.infrastructure.cluster.x-k8s.io/capi-eks-md-0 created
-# eksconfigtemplate.bootstrap.cluster.x-k8s.io/capi-eks-md-0 created
+# Error: failed to get repository client for the InfrastructureProvider with name aws: error creating the GitHub repository client: failed to get GitHub latest version: failed to get the list of versions: rate limit for github api has been reached. Please wait one hour or get a personal API tokens a assign it to the GITHUB_TOKEN environment variable
+# 기다렸다가 재시도
 ```
 
-- 컨트롤 플레인 1, 워커 노드 1 만드는 데 대략 17분 걸렸습니다.
+```bash
+sudo kubectl apply -f aws/scripts/eks.yaml
+# cluster.cluster.x-k8s.io/capa-test created
+# awsmanagedcluster.infrastructure.cluster.x-k8s.io/capa-test created
+# awsmanagedcontrolplane.controlplane.cluster.x-k8s.io/capa-test-control-plane created
+# machinedeployment.cluster.x-k8s.io/capa-test-md-0 created
+# awsmachinetemplate.infrastructure.cluster.x-k8s.io/capa-test-md-0 created
+# eksconfigtemplate.bootstrap.cluster.x-k8s.io/capa-test-md-0 created
+```
 
 ```bash
 kubectl get ev
@@ -133,7 +136,8 @@ kubectl get ev
 
 ![creating-eks-cluster](images/creating-eks-cluster.png)
 
-- 완료까지 대략 20-30분 걸렸습니다.
+- 컨트롤 플레인 1, 워커 노드 1 생성 완료까지 대략 17분 걸렸습니다.
+- 컨트롤 플레인 1, 워커 노드 2 생성 완료까지 대략 20-30분 걸렸습니다.
 
 ```bash
 clusterctl describe cluster capa-test
@@ -240,7 +244,7 @@ kubectl --kubeconfig=aws/eks.kubeconfig get pods -A -o wide
 - 제거는 5분도 안걸렸습니다.
 
 ```bash
-kubectl delete cluster capi-eks
+kubectl delete cluster capa-test
 ```
 
 ![deleting-eks-cluster](images/deleting-eks-cluster.png)
