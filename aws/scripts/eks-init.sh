@@ -75,7 +75,7 @@ kubectl get po -A
 msg "✅ Complete\n---"
 
 msg "${YELLOW}Create Workload Cluster...${NOFORMAT}"
-# TODO: lazy loading
+# TODO: need lazy loading
 clusterctl config cluster $cluster_name --flavor eks >$script_dir/eks.yaml
 kubectl apply -f $script_dir/eks.yaml
 msg "✅ Complete\n---"

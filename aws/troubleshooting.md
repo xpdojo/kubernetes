@@ -30,7 +30,7 @@ kubectl get ev
 # 30m         Normal    NodeHasSufficientPID               node/clusterapi-control-plane         Node clusterapi-control-plane status is now: NodeHasSufficientPID
 ```
 
-## EKS 클러스터 생성 시 EC2보다 webhook이 늦음
+## EKS 클러스터 생성 시 EC2보다 bootstrap이 느림
 
 ```bash
 kubectl apply -f $script_dir/eks.yaml
@@ -55,6 +55,14 @@ kubectl apply -f $script_dir/eks.yaml
 # machinedeployment.cluster.x-k8s.io/capa-test-md-0 unchanged
 # awsmachinetemplate.infrastructure.cluster.x-k8s.io/capa-test-md-0 created
 # eksconfigtemplate.bootstrap.cluster.x-k8s.io/capa-test-md-0 unchanged
+
+kubectl api-resources | grep cluster
+kubectl describe machinedeployments capa-test-md-0
+# Events:
+# Type     Reason            Age                 From                          Message
+# ----     ------            ----                ----                          -------
+# Warning  ReconcileError    30m (x18 over 41m)  machinedeployment-controller  failed to retrieve AWSMachineTemplate external object "default"/"capa-test-md-0": awsmachinetemplates.infrastructure.cluster.x-k8s.io "capa-test-md-0" not found
+# Normal   SuccessfulCreate  23m                 machinedeployment-controller  Created MachineSet "capa-test-md-0-d88b79d65"
 ```
 
 ## EKS 클러스터 생성 시 오류
@@ -66,4 +74,14 @@ kubectl apply -f $script_dir/eks.yaml
 ```bash
 kubeclt get events
 # 36m         Warning   readOnlySysFS                                  node/clusterapi-worker                          CRI error: /sys is read-only: cannot modify conntrack limits, problems may arise later (If running Docker, see docker issue #24000)
+```
+
+## EKS Machine 생성 오류
+
+- 해결 못함
+
+```bash
+kubectl get events
+# 31s         Warning   FailedCreate                                   awsmachine/capa-test-md-0-wt5kx                  (combined from similar events): Failed to create instance: failed to run instance: Blocked: This account is currently blocked and not recognized as a valid account. Please contact aws-verification@amazon.com if you have questions.
+#             status code: 400, request id: a9c64ae3-d3a8-4b06-989c-a687f53af383
 ```
