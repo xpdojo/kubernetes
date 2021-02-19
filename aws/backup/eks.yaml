@@ -1,0 +1,78 @@
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: Cluster
+metadata:
+  name: capi-eks
+  namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    kind: AWSManagedControlPlane
+    name: capi-eks-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+    kind: AWSManagedCluster
+    name: capi-eks
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: AWSManagedCluster
+metadata:
+  name: capi-eks
+  namespace: default
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+kind: AWSManagedControlPlane
+metadata:
+  name: capi-eks-control-plane
+  namespace: default
+spec:
+  region: ap-northeast-2
+  sshKeyName: aws-provider
+  version: v1.18.15
+---
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: MachineDeployment
+metadata:
+  name: capi-eks-md-0
+  namespace: default
+spec:
+  clusterName: capi-eks
+  replicas: 1
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+          kind: EKSConfigTemplate
+          name: capi-eks-md-0
+      clusterName: capi-eks
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+        kind: AWSMachineTemplate
+        name: capi-eks-md-0
+      version: v1.18.15
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: AWSMachineTemplate
+metadata:
+  name: capi-eks-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
+      instanceType: t3.small
+      sshKeyName: aws-provider
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+kind: EKSConfigTemplate
+metadata:
+  name: capi-eks-md-0
+  namespace: default
+spec:
+  template: {}
