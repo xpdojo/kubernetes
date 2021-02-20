@@ -136,18 +136,45 @@ kubectl get ev
 
 ![creating-eks-cluster](images/creating-eks-cluster.png)
 
-- 컨트롤 플레인 1, 워커 노드 1 생성 완료까지 대략 17분 걸렸습니다.
-- 컨트롤 플레인 1, 워커 노드 2 생성 완료까지 대략 20-30분 걸렸습니다.
+- 컨트롤 플레인 1, 워커 노드 1 생성 완료까지 대략 17분 소요
+- 컨트롤 플레인 1, 워커 노드 2 생성 완료까지 대략 20-30분 소요
 
 ```bash
-clusterctl describe cluster capa-test
-# NAME                                                               READY  SEVERITY  REASON  SINCE  MESSAGE                                                           
-# /capa-test                                                         True                     22m                                                                      
-# ├─ClusterInfrastructure - AWSManagedCluster/capa-test                                                                                                              
-# ├─ControlPlane - AWSManagedControlPlane/capa-test-control-plane  True                     22m                                                                      
-# └─Workers                                                                                                                                                          
-#   └─MachineDeployment/capa-test-md-0                                                                                                                               
-#     └─2 Machines...                                              True                     18m 
+clusterctl describe cluster --show-conditions=all --disable-grouping --disable-no-echo capa-test
+# NAME                                                                READY  SEVERITY  REASON  SINCE  MESSAGE
+# /capa-test                                                          True                     17m           
+# ├─ClusterInfrastructure - AWSManagedCluster/capa-test                                                    
+# ├─ControlPlane - AWSManagedControlPlane/capa-test-control-plane   True                     17m           
+# │             ├─ClusterSecurityGroupsReady                       True                     28m           
+# │             ├─EKSAddonsConfigured                              True                     17m           
+# │             ├─EKSControlPlaneReady                             True                     17m           
+# │             ├─IAMAuthenticatorConfigured                       True                     17m           
+# │             ├─IAMControlPlaneRolesReady                        True                     28m           
+# │             ├─InternetGatewayReady                             True                     30m           
+# │             ├─NatGatewaysReady                                 True                     28m           
+# │             ├─RouteTablesReady                                 True                     28m           
+# │             ├─SubnetsReady                                     True                     30m           
+# │             └─VpcReady                                         True                     30m           
+# └─Workers                                                                                                
+#   └─MachineDeployment/capa-test-md-0                                                                     
+#     ├─Machine/capa-test-md-0-d88b79d65-b2d2h                      True                     9m46s         
+#     │ │           ├─BootstrapReady                              True                     10m           
+#     │ │           ├─InfrastructureReady                         True                     9m46s         
+#     │ │           └─NodeHealthy                                 True                     8m49s         
+#     │ ├─BootstrapConfig - EKSConfig/capa-test-md-0-sdgx5         True                     10m           
+#     │ │             └─DataSecretAvailable                       True                     10m           
+#     │ └─MachineInfrastructure - AWSMachine/capa-test-md-0-j56lg  True                     9m46s         
+#     │               ├─InstanceReady                              True                     9m46s         
+#     │               └─SecurityGroupsReady                        True                     9m46s         
+#     └─Machine/capa-test-md-0-d88b79d65-gbdpt                      True                     9m46s         
+#       │           ├─BootstrapReady                               True                     10m           
+#       │           ├─InfrastructureReady                          True                     9m46s         
+#       │           └─NodeHealthy                                  True                     8m49s         
+#       ├─BootstrapConfig - EKSConfig/capa-test-md-0-vdnhf          True                     10m           
+#       │             └─DataSecretAvailable                        True                     10m           
+#       └─MachineInfrastructure - AWSMachine/capa-test-md-0-xgxcj   True                     9m46s         
+#                     ├─InstanceReady                               True                     9m46s         
+#                     └─SecurityGroupsReady                         True                     9m46s
 ```
 
 ![ready-eks](images/ready-eks.png)
@@ -207,14 +234,14 @@ kubectl get machinedeployments -A
 ```bash
 kubectl --namespace=default get secret capa-test-kubeconfig \
   -o jsonpath={.data.value} | base64 --decode \
-  > aws/eks.kubeconfig
+  > aws/capa-test.kubeconfig
 ```
 
 ```bash
-kubectl --kubeconfig=aws/eks.kubeconfig config current-context
+kubectl --kubeconfig=aws/capa-test.kubeconfig config current-context
 # default_capa-test-control-plane-capi-admin@default_capa-test-control-plane
 
-kubectl --kubeconfig=aws/eks.kubeconfig get nodes --show-labels
+kubectl --kubeconfig=aws/capa-test.kubeconfig get nodes --show-labels
 # NAME                                              STATUS   ROLES    AGE   VERSION              LABELS
 # ip-10-0-100-250.ap-northeast-2.compute.internal   Ready    <none>   23m   v1.18.9-eks-d1db3c   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/instance-type=t3.small,beta.kubernetes.io/os=linux,failure-domain.beta.kubernetes.io/region=ap-northeast-2,failure-domain.beta.kubernetes.io/zone=ap-northeast-2a,kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-100-250.ap-northeast-2.compute.internal,kubernetes.io/os=linux,node.kubernetes.io/instance-type=t3.small,topology.kubernetes.io/region=ap-northeast-2,topology.kubernetes.io/zone=ap-northeast-2a
 # ip-10-0-107-253.ap-northeast-2.compute.internal   Ready    <none>   23m   v1.18.9-eks-d1db3c   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/instance-type=t3.small,beta.kubernetes.io/os=linux,failure-domain.beta.kubernetes.io/region=ap-northeast-2,failure-domain.beta.kubernetes.io/zone=ap-northeast-2a,kubernetes.io/arch=amd64,kubernetes.io/hostname=ip-10-0-107-253.ap-northeast-2.compute.internal,kubernetes.io/os=linux,node.kubernetes.io/instance-type=t3.small,topology.kubernetes.io/region=ap-northeast-2,topology.kubernetes.io/zone=ap-northeast-2a
@@ -251,11 +278,12 @@ kubectl delete cluster capa-test
 
 ```bash
 # clusterctl delete --infrastructure aws --control-plane aws-eks --bootstrap aws-eks
-clusterctl delete --infrastructure aws
+clusterctl delete --infrastructure aws --control-plane aws-eks --bootstrap aws-eks
+
 # Error: Unable to find default namespace for the "infrastructure-aws" provider. Please specify the provider's namespace
-clusterctl delete --control-plane aws-eks --bootstrap aws-eks
+# 다시 한번 실행
 ```
 
 ```bash
-kind delete cluster --name clusterapi
+kind delete cluster --name capa-test
 ```

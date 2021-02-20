@@ -35,7 +35,9 @@ kubectl get ev
 # 30m         Normal    NodeHasSufficientPID               node/clusterapi-control-plane         Node clusterapi-control-plane status is now: NodeHasSufficientPID
 ```
 
-## EKS 클러스터 생성 시 EC2보다 bootstrap이 느림
+## Controller Manager
+
+- EKS 클러스터 생성 시 EC2보다 bootstrap이 느립니다.
 
 ```bash
 kubectl apply -f $script_dir/eks.yaml
@@ -50,9 +52,20 @@ kubectl apply -f $script_dir/eks.yaml
 # make: *** [eks-init] Error 1
 ```
 
-- 조금 기다렸다가 다시 생성해주면 됨
+- 모든 Controller Manager 상태가 준비되길 기다렸다가 다시 생성해주면 됩니다.
 
 ```bash
+kubectl get pods \
+  --selector control-plane=controller-manager \
+  --all-namespaces
+# NAMESPACE                           NAME                                                             READY   STATUS    RESTARTS   AGE
+# capi-kubeadm-bootstrap-system       capi-kubeadm-bootstrap-controller-manager-859d5f5b95-f4l2g       2/2     Running   0          17m
+# capi-kubeadm-control-plane-system   capi-kubeadm-control-plane-controller-manager-65b965795b-lm25q   2/2     Running   0          17m
+# capi-system                         capi-controller-manager-6f58d487c6-9qqc7                         2/2     Running   0          17m
+# capi-webhook-system                 capi-controller-manager-8594f758d7-tz2m4                         2/2     Running   0          17m
+# capi-webhook-system                 capi-kubeadm-bootstrap-controller-manager-764fbdf7db-lw66s       2/2     Running   0          17m
+# capi-webhook-system                 capi-kubeadm-control-plane-controller-manager-8f4744fbc-h8lfs    2/2     Running   0          17m
+
 kubectl apply -f $script_dir/eks.yaml
 # cluster.cluster.x-k8s.io/capa-test unchanged
 # awsmanagedcluster.infrastructure.cluster.x-k8s.io/capa-test unchanged
@@ -70,9 +83,9 @@ kubectl describe machinedeployments capa-test-md-0
 # Normal   SuccessfulCreate  23m                 machinedeployment-controller  Created MachineSet "capa-test-md-0-d88b79d65"
 ```
 
-## EKS Machine 생성 오류
+## Machine 생성 오류
 
-- credential 재생성 후 클러스터 재생성
+- credential 환경 변수 등록 후 클러스터 재생성
 
 ```bash
 kubectl get events
@@ -80,7 +93,7 @@ kubectl get events
 #             status code: 400, request id: a9c64ae3-d3a8-4b06-989c-a687f53af383
 ```
 
-## EKS 클러스터 생성 시 오류
+## 클러스터 생성 시 오류
 
 - 해결 못함
 - https://github.com/kubernetes/kubernetes/blob/master/cmd/kube-proxy/app/server.go#L692

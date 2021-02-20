@@ -4,7 +4,7 @@ set -Eeuo pipefail
 # trap cleanup SIGINT SIGTERM ERR EXIT
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
-source $script_dir/var.env
+source $script_dir/.env
 
 setup_colors() {
   if [[ -t 2 ]] && [[ -z "${NO_COLOR-}" ]] && [[ "${TERM-}" != "dumb" ]]; then
@@ -23,10 +23,10 @@ check_command() {
   for i in "$@"; do
     cmd=$i
     if ! command -v $cmd &>/dev/null; then
-      msg "${RED}[NEED] $cmd"
+      msg "${RED}[Not Installed] $cmd"
       exit 0
     else
-      msg "${GREEN}[OK] ${NOFORMAT}$cmd"
+      msg "${GREEN}[Installed] ${NOFORMAT}$cmd"
     fi
   done
 }
@@ -37,13 +37,14 @@ msg "✅ Complete\n---"
 
 msg "${YELLOW}Create Kind Cluster...${NOFORMAT}"
 if kind get clusters | grep -q $cluster_name; then
-  echo "Cluster \"$cluster_name\" already exists"
+  msg "${CYAN}Cluster \"$cluster_name\" already exists${NOFORMAT}"
 else
   kind create cluster --name $cluster_name --config=$kind_config_path
   msg "✅ Complete\n---"
 fi
 
 msg "${YELLOW}Setting Required Configurations...${NOFORMAT}"
+# https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/master/templates/cluster-template-eks.yaml
 export EXP_EKS=false
 export EXP_EKS_IAM=false
 export EXP_EKS_ADD_ROLES=false
@@ -63,7 +64,7 @@ msg "✅ Complete\n---"
 
 msg "${YELLOW}Initialize Management Cluster...${NOFORMAT}"
 if kubectl get providers -n capa-system | grep -q InfrastructureProvider; then
-  echo "InfrastructureProvider already exists"
+  msg "${CYAN}InfrastructureProvider already exists${NOFORMAT}"
 else
   clusterctl init --infrastructure aws -v 4
   msg "✅ Complete\n---"
@@ -71,11 +72,42 @@ fi
 
 msg "${YELLOW}Providers List...${NOFORMAT}"
 kubectl get providers -A
+kubectl get po -A
 msg "✅ Complete\n---"
 
 msg "${YELLOW}Create Workload Cluster...${NOFORMAT}"
+
+function checkWebhookStatus() {
+  local status=$(
+    kubectl get pods \
+      --selector control-plane=controller-manager \
+      --all-namespaces \
+      --output jsonpath='{.items[*].status.containerStatuses[*].ready}'
+  )
+
+  for ready in $status; do
+    if [[ $ready == "false" ]]; then
+      ret=false
+      msg "ready: $ret"
+      return
+    fi
+  done
+  ret=true
+  msg "ready: $ret"
+}
+
+while true; do
+  checkWebhookStatus
+  if $ret; then
+    break
+  else
+    msg "${CYAN}Waiting for Controller Managers to be ready...${NOFORMAT}"
+    sleep 5
+  fi
+done
+
 clusterctl config cluster $cluster_name >$script_dir/$cluster_name.yaml
 kubectl apply -f $script_dir/$cluster_name.yaml
 msg "✅ Complete\n---"
 
-clusterctl describe cluster $cluster_name
+clusterctl describe cluster --show-conditions=all --disable-grouping --disable-no-echo $cluster_name
