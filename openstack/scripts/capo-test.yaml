@@ -1,0 +1,192 @@
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: Cluster
+metadata:
+  name: capo-test
+  namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    serviceDomain: cluster.local
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    kind: KubeadmControlPlane
+    name: capo-test-control-plane
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+    kind: OpenStackCluster
+    name: capo-test
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackCluster
+metadata:
+  name: capo-test
+  namespace: default
+spec:
+  cloudName: devstack
+  cloudsSecret:
+    name: capo-test-cloud-config
+    namespace: default
+  disablePortSecurity: false
+  dnsNameservers:
+  - 8.8.8.8
+  managedAPIServerLoadBalancer: true
+  managedSecurityGroups: true
+  nodeCidr: 10.6.0.0/24
+  useOctavia: true
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+kind: KubeadmControlPlane
+metadata:
+  name: capo-test-control-plane
+  namespace: default
+spec:
+  infrastructureTemplate:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+    kind: OpenStackMachineTemplate
+    name: capo-test-control-plane
+  kubeadmConfigSpec:
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        extraVolumes:
+        - hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          name: cloud
+          readOnly: true
+      controllerManager:
+        extraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        extraVolumes:
+        - hostPath: /etc/kubernetes/cloud.conf
+          mountPath: /etc/kubernetes/cloud.conf
+          name: cloud
+          readOnly: true
+        - hostPath: /etc/certs/cacert
+          mountPath: /etc/certs/cacert
+          name: cacerts
+          readOnly: true
+      imageRepository: k8s.gcr.io
+    files:
+    - content: W0dsb2JhbF0KYXV0aC11cmw9aHR0cDovLzEwLjAuMi4xNS9pZGVudGl0eQp1c2VybmFtZT0iZGVtbyIKcGFzc3dvcmQ9Imluc2VjdXJlcGFzcyIKdGVuYW50LW5hbWU9ImRlbW8iCmRvbWFpbi1pZD0iZGVmYXVsdCIKcmVnaW9uPSJSZWdpb25PbmUiCg==
+      encoding: base64
+      owner: root
+      path: /etc/kubernetes/cloud.conf
+      permissions: "0600"
+    - content: Cg==
+      encoding: base64
+      owner: root
+      path: /etc/certs/cacert
+      permissions: "0600"
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        name: '{{ local_hostname }}'
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-config: /etc/kubernetes/cloud.conf
+          cloud-provider: openstack
+        name: '{{ local_hostname }}'
+  replicas: 1
+  version: v1.18.15
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackMachineTemplate
+metadata:
+  name: capo-test-control-plane
+  namespace: default
+spec:
+  template:
+    spec:
+      cloudName: devstack
+      cloudsSecret:
+        name: capo-test-cloud-config
+        namespace: default
+      flavor: m1.medium
+      image: ubuntu-1804-kube-v.18.15
+      sshKeyName: openstack-provider
+---
+apiVersion: cluster.x-k8s.io/v1alpha3
+kind: MachineDeployment
+metadata:
+  name: capo-test-md-0
+  namespace: default
+spec:
+  clusterName: capo-test
+  replicas: 1
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+          kind: KubeadmConfigTemplate
+          name: capo-test-md-0
+      clusterName: capo-test
+      failureDomain: nova
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+        kind: OpenStackMachineTemplate
+        name: capo-test-md-0
+      version: v1.18.15
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha3
+kind: OpenStackMachineTemplate
+metadata:
+  name: capo-test-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      cloudName: devstack
+      cloudsSecret:
+        name: capo-test-cloud-config
+        namespace: default
+      flavor: m1.medium
+      image: ubuntu-1804-kube-v.18.15
+      sshKeyName: openstack-provider
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+kind: KubeadmConfigTemplate
+metadata:
+  name: capo-test-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      files:
+      - content: W0dsb2JhbF0KYXV0aC11cmw9aHR0cDovLzEwLjAuMi4xNS9pZGVudGl0eQp1c2VybmFtZT0iZGVtbyIKcGFzc3dvcmQ9Imluc2VjdXJlcGFzcyIKdGVuYW50LW5hbWU9ImRlbW8iCmRvbWFpbi1pZD0iZGVmYXVsdCIKcmVnaW9uPSJSZWdpb25PbmUiCg==
+        encoding: base64
+        owner: root
+        path: /etc/kubernetes/cloud.conf
+        permissions: "0600"
+      - content: Cg==
+        encoding: base64
+        owner: root
+        path: /etc/certs/cacert
+        permissions: "0600"
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-config: /etc/kubernetes/cloud.conf
+            cloud-provider: openstack
+          name: '{{ local_hostname }}'
+---
+apiVersion: v1
+data:
+  cacert: Cg==
+  clouds.yaml: Y2xvdWRzOgogIGRldnN0YWNrOgogICAgYXV0aDoKICAgICAgYXV0aF91cmw6IGh0dHA6Ly8xMC4wLjIuMTUvaWRlbnRpdHkKICAgICAgcGFzc3dvcmQ6IGluc2VjdXJlcGFzcwogICAgICBwcm9qZWN0X2RvbWFpbl9pZDogZGVmYXVsdAogICAgICBwcm9qZWN0X25hbWU6IGRlbW8KICAgICAgdXNlcl9kb21haW5faWQ6IGRlZmF1bHQKICAgICAgdXNlcm5hbWU6IGRlbW8KICAgIGlkZW50aXR5X2FwaV92ZXJzaW9uOiAnMycKICAgIHJlZ2lvbl9uYW1lOiBSZWdpb25PbmUKICAgIHZvbHVtZV9hcGlfdmVyc2lvbjogJzMnCg==
+kind: Secret
+metadata:
+  labels:
+    clusterctl.cluster.x-k8s.io/move: "true"
+  name: capo-test-cloud-config
+  namespace: default

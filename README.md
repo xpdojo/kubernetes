@@ -34,11 +34,11 @@ kind version
 
 ```bash
 kind completion zsh # `bash`, `zsh`, `fish`
-# kind create cluster --name=clusterapi
-kind create cluster --name=clusterapi --config=kind-config.yaml
+# kind create cluster --name=capi
+kind create cluster --name=capi --config=kind-config.yaml
 kubectl config current-context
-# kind-clusterapi
-kubectl cluster-info --context kind-clusterapi
+# kind-capi
+kubectl cluster-info --context kind-capi
 # Kubernetes control plane is running at https://127.0.0.1:54301
 # KubeDNS is running at https://127.0.0.1:54301/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 ```

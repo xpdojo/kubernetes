@@ -1,0 +1,45 @@
+clouds:
+  devstack:
+    auth:
+      auth_url: http://10.0.2.15/identity
+      password: insecurepass
+      project_domain_id: default
+      project_name: demo
+      user_domain_id: default
+      username: demo
+    identity_api_version: '3'
+    region_name: RegionOne
+    volume_api_version: '3'
+  devstack-admin:
+    auth:
+      auth_url: http://10.0.2.15/identity
+      password: insecurepass
+      project_domain_id: default
+      project_name: admin
+      user_domain_id: default
+      username: admin
+    identity_api_version: '3'
+    region_name: RegionOne
+    volume_api_version: '3'
+  devstack-alt:
+    auth:
+      auth_url: http://10.0.2.15/identity
+      password: insecurepass
+      project_domain_id: default
+      project_name: alt_demo
+      user_domain_id: default
+      username: alt_demo
+    identity_api_version: '3'
+    region_name: RegionOne
+    volume_api_version: '3'
+  devstack-system-admin:
+    auth:
+      auth_url: http://10.0.2.15/identity
+      password: insecurepass
+      system_scope: all
+      username: admin
+    identity_api_version: '3'
+    region_name: RegionOne
+    volume_api_version: '3'
+functional:
+  image_name: cirros-0.5.1-x86_64-disk
