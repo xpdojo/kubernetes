@@ -1,18 +1,29 @@
 # Cluster API 스터디
 
-## 참조
+## Supported Providers list
+
+- [reference](https://cluster-api.sigs.k8s.io/reference/providers.html)
 
 | Abbreviation |                                                                                                                                               |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | CAPI         | [Cluster API](https://github.com/kubernetes-sigs/cluster-api)                                                                                 |
 | CAPA         | [Cluster API Provider AWS](https://github.com/kubernetes-sigs/cluster-api-provider-aws)                                                       |
-| -            | [Cluster API Provider Azure](https://github.com/kubernetes-sigs/cluster-api-provider-azure)                                                   |
-| CAPO         | [Cluster API Provider OpenStack](https://github.com/kubernetes-sigs/cluster-api-provider-openstack)                                           |
 | CAPG         | [Cluster API Provider GCP](https://github.com/kubernetes-sigs/cluster-api-provider-gcp)                                                       |
+| CAPO         | [Cluster API Provider OpenStack](https://github.com/kubernetes-sigs/cluster-api-provider-openstack)                                           |
+| CAPV         | [Cluster API Provider vSphere](https://github.com/kubernetes-sigs/cluster-api-provider-vsphere)                                               |
+| CAPZ         | [Cluster API Provider Azure](https://github.com/kubernetes-sigs/cluster-api-provider-azure)                                                   |
 | CABPK        | [Cluster API Boostrap Provider Kubeadm](https://github.com/kubernetes-sigs/cluster-api/blob/v0.3.14/docs/book/src/tasks/kubeadm-bootstrap.md) |
 
-- Kubernetes Korea Group - [유튜브](https://www.youtube.com/channel/UC1BCaPrwl7KK4KkQVaNK3Dg)
-- [Supported Providers list](https://cluster-api.sigs.k8s.io/reference/providers.html)
+## Kubernetes Korea Group - [Youtube](https://www.youtube.com/channel/UC1BCaPrwl7KK4KkQVaNK3Dg)
+
+| #   | date | topic                 | video                                   | slide                                                                                                     |
+| --- | ---- | --------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | 2/17 | Quickstart            | [youtube](https://youtu.be/N_JpmdBlNLo) | [pdf](https://drive.google.com/file/d/1_2lS_qkvr_4LD0bP5_L2k71kMdPjIRgu/view)                             |
+| 2   | 3/3  | Objects & Controllers | [youtube](https://youtu.be/duKW0DkJ9Zo) | [google slides](https://docs.google.com/presentation/d/1eohUe_i_7hIW_XycQwujAqRLGGSfNoR_AcDoWDrxF_M/edit) |
+| 3   | 3/17 | -                     | -                                       | -                                                                                                         |
+| 4   | 3/31 | -                     | -                                       | -                                                                                                         |
+| 5   | 4/14 | -                     | -                                       | -                                                                                                         |
+| 6   | 4/28 | -                     | -                                       | -                                                                                                         |
 
 ## 공통 테스트 환경
 
