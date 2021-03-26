@@ -30,6 +30,10 @@ git clone https://github.com/johnstcn/vagrant-devstack.git
 # sudo apt-get install -y nfs-server
 # vagrant plugin install vagrant-hostmanager
 vagrant up
+vagrant ssh
+./devstack/stack.sh
+# 40분~45분 소요
+# vagrant halt
 ```
 
 ```bash

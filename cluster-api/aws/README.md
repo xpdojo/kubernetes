@@ -81,6 +81,12 @@ export AWS_SSH_KEY_NAME=aws-provider
 ## 필수 Configuration
 
 - [Initialization for common providers](https://cluster-api.sigs.k8s.io/user/quick-start.html#initialization-for-common-providers)
+
+```bash
+# clusterawsadm bootstrap iam create-cloudformation-stack
+clusterawsadm bootstrap iam create-cloudformation-stack --config ./bootstrap-config.yaml
+```
+
 - [AWS IAM resources](https://cluster-api-aws.sigs.k8s.io/topics/using-clusterawsadm-to-fulfill-prerequisites.html#with-clusterawsadm)
 - [AWS Security Credentials](https://console.aws.amazon.com/iam/home?#/security_credentials) - Access Key를 생성하는 페이지입니다.
 
@@ -125,6 +131,10 @@ export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-a
 - [verbosity 5](https://github.com/kubernetes-sigs/cluster-api/issues/3351#issuecomment-660290631)
 - [Enabling EKS Support](https://cluster-api-aws.sigs.k8s.io/topics/eks/enabling.html)
 
+![init](images/init.png)
+
+_출처: [(proposal) Clusterctl redesign - Improve user experience and management across Cluster API providers](https://github.com/kubernetes-sigs/cluster-api/blob/release-0.3/docs/proposals/20191016-clusterctl-redesign.md)_
+
 ```bash
 export EXP_EKS=false
 export EXP_EKS_IAM=false
@@ -162,6 +172,10 @@ clusterctl init --infrastructure aws -v 5
 
 > control-plane 노드를 짝수로 설정하면 오류가 발생합니다.\
 > spec.replicas: Forbidden: cannot be an even number when using managed etcd
+
+![config](images/config.png)
+
+_출처: [(proposal) Clusterctl redesign - Improve user experience and management across Cluster API providers](https://github.com/kubernetes-sigs/cluster-api/blob/release-0.3/docs/proposals/20191016-clusterctl-redesign.md)_
 
 ```bash
 clusterctl config cluster capa-test > aws/scripts/capa-test.yaml
