@@ -1,7 +1,7 @@
-# Elastic Cluster를 오퍼레이터로 배포하는 이유
+# Kubernets Operator
 
-- [Elastic Cluster를 오퍼레이터로 배포하는 이유](#elastic-cluster를-오퍼레이터로-배포하는-이유)
-  - [쿠버네티스에서의 오퍼레이터](#쿠버네티스에서의-오퍼레이터)
+- [Kubernets Operator](#kubernets-operator)
+  - [오퍼레이터 패턴](#오퍼레이터-패턴)
   - [오퍼레이터 사용 동기](#오퍼레이터-사용-동기)
     - [Helm](#helm)
     - [Operator](#operator)
@@ -12,9 +12,9 @@
 
 [출처: 애플리케이션 자동화를 위한 쿠버네티스 오퍼레이터 개발 - 한우형](https://www.youtube.com/watch?v=abHOcr-HTI4)
 
-## 쿠버네티스에서의 오퍼레이터
+## 오퍼레이터 패턴
 
-![k8s-control-loop](images/k8s-control-loop.png)
+![k8s-control-loop](../images/k8s-control-loop.png)
 
 - 컨트롤러
   - 현재 상태를 사용자의 desired state에 일치시키는 프로그램
@@ -26,7 +26,7 @@
 
 ## 오퍼레이터 사용 동기
 
-![helm-vs-operator](images/helm-vs-operator.png)
+![helm-vs-operator](../images/helm-vs-operator.png)
 
 ### Helm
 

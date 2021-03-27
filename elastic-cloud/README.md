@@ -8,15 +8,15 @@
 
 ### Volumes
 
-![types-of-mounts-bind](images/types-of-mounts-volume.png)
+![types-of-mounts-bind](../images/elastic/types-of-mounts-volume.png)
 
 ### Bind mounts
 
-![types-of-mounts-bind](images/types-of-mounts-bind.png)
+![types-of-mounts-bind](../images/elastic/types-of-mounts-bind.png)
 
 ### tmpfs mounts
 
-![types-of-mounts-bind](images/types-of-mounts-tmpfs.png)
+![types-of-mounts-bind](../images/elastic/types-of-mounts-tmpfs.png)
 
 ## Elasticsearch
 
@@ -39,4 +39,4 @@
 
 - [TOC](https://fdv.github.io/running-elasticsearch-fun-profit/)
 
-![elasticsearch-index](images/elasticsearch-index.svg)
+![elasticsearch-index](../images/elastic/elasticsearch-index.svg)
