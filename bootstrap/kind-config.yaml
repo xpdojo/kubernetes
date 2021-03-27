@@ -1,0 +1,48 @@
+# https://github.com/kubernetes-sigs/kind/blob/master/site/content/docs/user/kind-example-config.yaml
+# https://kind.sigs.k8s.io/docs/user/quick-start/#setting-kubernetes-version
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/control-plane-flags/
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  ipFamily: ipv4 # "ipv6"
+  apiServerAddress: 127.0.0.1
+  apiServerPort: 6443
+  disableDefaultCNI: false
+  kubeProxyMode: "ipvs" # To disable kube-proxy, set the mode to "none".
+nodes:
+  # >>>>>>>>>>> CONTROL PLANE >>>>>>>>>>>
+  - role: control-plane
+    image: kindest/node:v1.18.15@sha256:5c1b980c4d0e0e8e7eb9f36f7df525d079a96169c8a8f20d8bd108c0d0889cc4
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+      - |
+        kind: ClusterConfiguration
+        apiServer:
+          extraArgs:
+            enable-admission-plugins: NodeRestriction,MutatingAdmissionWebhook,ValidatingAdmissionWebhook
+            feature-gates: "RemoveSelfLink=false"
+  - role: control-plane
+    image: kindest/node:v1.18.15@sha256:5c1b980c4d0e0e8e7eb9f36f7df525d079a96169c8a8f20d8bd108c0d0889cc4
+  - role: control-plane
+    image: kindest/node:v1.18.15@sha256:5c1b980c4d0e0e8e7eb9f36f7df525d079a96169c8a8f20d8bd108c0d0889cc4
+  # >>>>>>>>>>> WORKER NODE >>>>>>>>>>>
+  - role: worker
+    image: kindest/node:v1.18.15@sha256:5c1b980c4d0e0e8e7eb9f36f7df525d079a96169c8a8f20d8bd108c0d0889cc4
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "cpu=true"
+  - role: worker
+    image: kindest/node:v1.18.15@sha256:5c1b980c4d0e0e8e7eb9f36f7df525d079a96169c8a8f20d8bd108c0d0889cc4
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "cpu=true"
