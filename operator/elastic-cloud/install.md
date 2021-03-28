@@ -1,30 +1,8 @@
 # Elastic Cluster on Kubernetes (ECK)
 
 - [Elastic Cluster on Kubernetes (ECK)](#elastic-cluster-on-kubernetes-eck)
-  - [NFS Provisioner](#nfs-provisioner)
   - [Install Elastic Stack using Helm](#install-elastic-stack-using-helm)
   - [Install Elastic Stack using Operator](#install-elastic-stack-using-operator)
-
-## NFS Provisioner
-
-- [NFS Client Provisioner 이용 가이드 - Naver Cloud](https://docs.ncloud.com/ko/vnks/nks-nfs_client_provisioner.html)
-- [Set up NFS server](https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nfs-mount-on-ubuntu-20-04)
-
-```bash
-helm repo add stable https://charts.helm.sh/stable
-helm repo update
-```
-
-```bash
-helm install nas-storage stable/nfs-client-provisioner \
---set nfs.server=__NAS_IP__ \
---set nfs.path=__NAS_PATH__
-```
-
-```bash
-kubectl get sc
-# kubectl patch storageclass nfs-client -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-```
 
 ## Install Elastic Stack using Helm
 
