@@ -1,19 +1,25 @@
 # kind
 
 - [kind](#kind)
-  - [References](#references)
-  - [Install `kind`](#install-kind)
-  - [Create Cluster](#create-cluster)
+  - [참고 자료](#참고-자료)
+  - [Kind란?](#kind란)
+  - [`kind` 커맨드 도구 설치](#kind-커맨드-도구-설치)
+  - [kind 클러스터 생성](#kind-클러스터-생성)
   - [kindnet](#kindnet)
   - [Ingress](#ingress)
   - [LoadBalancer](#loadbalancer)
-  - [Delete Cluster](#delete-cluster)
+  - [Kind 클러스터 제거](#kind-클러스터-제거)
 
-## References
+## 참고 자료
 
 - [Docs](https://kind.sigs.k8s.io/)
 
-## Install `kind`
+## Kind란?
+
+- 로컬 환경에서 쿠버네티스 클러스터를 매우 가볍게 실행시킬 수 있게 해주는 도구다.
+- 도커 컨테이너 하나를 노드 하나로 본다.
+
+## `kind` 커맨드 도구 설치
 
 ```bash
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64
@@ -21,7 +27,7 @@ chmod +x ./kind
 mv ./kind /some-dir-in-your-PATH/kind
 ```
 
-## Create Cluster
+## kind 클러스터 생성
 
 ```bash
 # sudo kind create cluster --name operator-test --image kindest/node:1.18.12
@@ -34,8 +40,8 @@ sudo kind get clusters
 
 ## kindnet
 
+- kind 클러스터에 사용되는 CNI
 - [aojea/kindnet](https://github.com/aojea/kindnet)
-  - kind에 사용되는 CNI
 
 ```bash
 sudo docker exec -it kind-control-plane bash
@@ -86,7 +92,7 @@ cat /etc/cni/net.d/10-kindnet.conflist
 
 - [Docs](https://kind.sigs.k8s.io/docs/user/loadbalancer/)
 
-## Delete Cluster
+## Kind 클러스터 제거
 
 ```bash
 sudo kind delete cluster --name operator-test
