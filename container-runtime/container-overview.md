@@ -121,14 +121,14 @@ _출처: [Docker Leads OCI Release of v1.0 Runtime and Image Format Specificatio
 
 _출처: [Kubernetes Containerd Integration Goes GA](https://kubernetes.io/blog/2018/05/24/kubernetes-containerd-integration-goes-ga/)_
 
-> 최근 쿠버네티스 블로그에 업로드된 Dockershim 제거에 대한 글[^1][^2]로
+> 최근 쿠버네티스 블로그에 업로드된 Dockershim 제거에 대한 글로
 > 도커를 못 쓰게 된 건지 혼란이 있었습니다. 도커가 워낙 만능이다보니
-> "컨테이너 엔진==컨테이너 런타임==CRI==도커"라는 오해에서 비롯되었습니다.
+> "~~컨테이너 엔진==컨테이너 런타임==CRI==도커~~"라는 오해에서 비롯되었습니다.
 > 자세한 내용은 [서비큐라님 글](https://subicura.com/k8s/2020/12/19/deprecate-docker),
 > [조훈님과 심근우님 글](https://www.slideshare.net/JoHoon1/the-myths-of-deprecating-docker-in-kubernetes)을 참고해주세요.
-
-[^1]: [Don't Panic: Kubernetes and Docker](https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/)
-[^2]: [Dockershim Deprecation FAQ](https://kubernetes.io/blog/2020/12/02/dockershim-faq/)
+>
+> - [Don't Panic: Kubernetes and Docker](https://kubernetes.io/blog/2020/12/02/dont-panic-kubernetes-and-docker/)
+> - [Dockershim Deprecation FAQ](https://kubernetes.io/blog/2020/12/02/dockershim-faq/)
 
 ![simple-orchestration-node](../images/container-runtime/simple-orchestration-node.png)
 
