@@ -14,6 +14,11 @@
 
 ## 오퍼레이터 패턴
 
+- [Controller](https://kubernetes.io/docs/concepts/architecture/controller/) - Kubernetes
+- [Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) - Kubernetes
+- [Introducing Operators: Putting Operational Knowledge into Software](https://web.archive.org/web/20170129131616/https://coreos.com/blog/introducing-operators.html) - CoreOS
+- [Best practices for building Kubernetes Operators and stateful apps](https://cloud.google.com/blog/products/containers-kubernetes/best-practices-for-building-kubernetes-operators-and-stateful-apps) - Google Cloud
+
 ![k8s-control-loop](../images/k8s-control-loop.png)
 
 - 컨트롤러
@@ -59,8 +64,11 @@
 - 라이브러리를 이용해서 밑바닥부터 개발
   - [client-go](https://github.com/kubernetes/client-go)
   - [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime)
-- [추천] 오퍼레이터 프레임워크
-  - [operator-sdk](https://github.com/operator-framework/operator-sdk)
+- [추천] 오퍼레이터 제작 도구
   - [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder)
+  - [KUDO](https://kudo.dev/) (Kubernetes Universal Declarative Operator)
+  - [Metacontroller](https://metacontroller.github.io/metacontroller/)
+  - [오퍼레이터 프레임워크](https://operatorframework.io/)
+    - [operator-sdk](https://github.com/operator-framework/operator-sdk)
 
 > 영상에선 operator-sdk를 추천하지만 저는 [kubernetes-sigs/cluster-api](https://github.com/kubernetes-sigs/cluster-api)를 사용하면서 kubebuilder를 공부해야 했기 때문에 kubebuilder를 사용했습니다.
