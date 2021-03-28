@@ -12,7 +12,7 @@
     - [Parameters (매개 변수)](#parameters-매개-변수)
     - [Result](#result)
     - [네트워크 구성](#네트워크-구성)
-    - [구성 예](#구성-예)
+      - [네트워크 구성 예](#네트워크-구성-예)
     - [네트워크 구성 목록](#네트워크-구성-목록)
       - [네트워크 구성 목록 에러 핸들링](#네트워크-구성-목록-에러-핸들링)
       - [네트워크 구성 목록 예](#네트워크-구성-목록-예)
@@ -294,7 +294,7 @@ The network configuration is described in JSON form. The configuration may be st
 
 Plugins may define additional fields that they accept and may generate an error if called with unknown fields. The exception to this is the `args` field may be used to pass arbitrary data which should be ignored by plugins if not understood.
 
-### 구성 예
+#### 네트워크 구성 예
 
 ```json
 {
