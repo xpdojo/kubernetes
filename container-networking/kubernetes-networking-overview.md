@@ -166,10 +166,12 @@ _출처: [Benchmark results of Kubernetes network plugins (CNI) over 10Gbit/s ne
 
 ## 쿠버네티스 서비스(Service)를 사용하는 이유
 
-- [공식 문서](https://kubernetes.io/ko/docs/concepts/services-networking/service/)
 - 쿠버네티스 파드는 Desired State와 일치하도록 끊임없이 생성되고 삭제됩니다(Reconciliation). 그리고 파드의 IP는 생성될 때마다 바뀝니다.
 - 예를 들어, 프론트엔드 서비스가 특정 워크로드의 백엔드 API를 사용하기 위해 어떻게 IP 주소를 찾아서 추적할 수 있을까요?
 - 쿠버네티스 서비스는 논리적 파드 집합을 정의하고 외부 트래픽 노출, 로드밸런싱 그리고 해당 파드 집합에 대한 서비스 디스커버리를 가능하게 해주는 추상 계층입니다.
+- 참고 자료
+  - [공식 문서](https://kubernetes.io/ko/docs/concepts/services-networking/service/)
+  - [Service Discovery in Kubernetes - Combining the Best of Two Worlds](https://iximiuz.com/en/posts/service-discovery-in-kubernetes/)
 
 ### 서비스 유형
 
