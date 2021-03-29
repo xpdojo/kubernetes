@@ -19,6 +19,10 @@
 - 로컬 환경에서 쿠버네티스 클러스터를 매우 가볍게 실행시킬 수 있게 해주는 도구입니다.
 - 도커 컨테이너 하나를 노드 하나로 봅니다.
 
+![kind-cluster](../images/cluster/kind-cluster.png)
+
+*출처: [kind 공식 문서](https://kind.sigs.k8s.io/docs/design/initial/)*
+
 ## `kind` 커맨드 도구 설치
 
 ```bash
@@ -31,7 +35,7 @@ mv ./kind /some-dir-in-your-PATH/kind
 
 ```bash
 # sudo kind create cluster --name operator-test --image kindest/node:1.18.12
-sudo kind create cluster --config ./bootstrap/kind-config.yaml
+sudo kind create cluster --config ./bootstrap/kind-default.yaml
 ```
 
 ```bash
