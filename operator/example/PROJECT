@@ -1,0 +1,7 @@
+domain: markruler.com
+repo: markruler.com
+resources:
+- group: gc
+  kind: Ruler
+  version: v1alpha1
+version: "2"

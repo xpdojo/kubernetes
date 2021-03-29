@@ -1,0 +1,6 @@
+apiVersion: gc.markruler.com/v1alpha1
+kind: Ruler
+metadata:
+  name: sample
+spec:
+  type: garbage

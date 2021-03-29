@@ -17,7 +17,6 @@
 - [Controller](https://kubernetes.io/docs/concepts/architecture/controller/) - Kubernetes
 - [Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) - Kubernetes
 - [Introducing Operators: Putting Operational Knowledge into Software](https://web.archive.org/web/20170129131616/https://coreos.com/blog/introducing-operators.html) - CoreOS
-- [Best practices for building Kubernetes Operators and stateful apps](https://cloud.google.com/blog/products/containers-kubernetes/best-practices-for-building-kubernetes-operators-and-stateful-apps) - Google Cloud
 
 ![k8s-control-loop](../images/k8s-control-loop.png)
 
