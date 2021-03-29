@@ -1,19 +1,23 @@
-# 쿠버네티스 오퍼레이터 제작하기
+# 쿠버네티스 오퍼레이터 제작하기 (with Kubebuilder)
 
-- [쿠버네티스 오퍼레이터 제작하기](#쿠버네티스-오퍼레이터-제작하기)
+- [쿠버네티스 오퍼레이터 제작하기 (with Kubebuilder)](#쿠버네티스-오퍼레이터-제작하기-with-kubebuilder)
   - [참고 자료](#참고-자료)
+    - [Best Practices](#best-practices)
+    - [더 읽을 거리](#더-읽을-거리)
   - [Quickstart](#quickstart)
     - [큐브빌더 `Kubebuilder` 설치](#큐브빌더-kubebuilder-설치)
-    - [커스터마이즈 `Kustomize` 설치](#커스터마이즈-kustomize-설치)
+    - [`kustomize` 설치](#kustomize-설치)
     - [프로젝트 생성](#프로젝트-생성)
     - [API 생성](#api-생성)
     - [CRD 생성](#crd-생성)
+    - [큐브빌더의 마커(Marker)란?](#큐브빌더의-마커marker란)
     - [매니페스트 생성](#매니페스트-생성)
     - [컨트롤 루프 생성](#컨트롤-루프-생성)
-  - [TODO: 도커 이미지 빌드](#todo-도커-이미지-빌드)
-  - [TODO: Kind 클러스터에 배포](#todo-kind-클러스터에-배포)
-  - [TODO: 테스트](#todo-테스트)
-  - [큐브빌더의 마커(Marker)란?](#큐브빌더의-마커marker란)
+  - [테스트](#테스트)
+    - [도커 이미지 빌드](#도커-이미지-빌드)
+    - [Kind 클러스터에 배포](#kind-클러스터에-배포)
+    - [Reconciliation 테스트](#reconciliation-테스트)
+    - [Clean up](#clean-up)
 
 ## 참고 자료
 
@@ -21,18 +25,31 @@
 - [오퍼레이터 허브](https://operatorhub.io/)
 - [The Kubebuilder Book](https://book.kubebuilder.io/)
 - [Write a Kubernetes Operator in Go with Ellen Körbes](https://youtu.be/85dKpsFFju4) - Kinvolk
+- [Kubernetes Kubebuilder를 이용한 Operator 개발](https://ssup2.github.io/programming/Kubernetes_Kubebuilder/) - ssup2
+- [Kubernetes Controller 구현해보기](https://getoutsidedoor.com/2020/05/09/kubernetes-controller-%EA%B5%AC%ED%98%84%ED%95%B4%EB%B3%B4%EA%B8%B0/) - zeroFruit
+
+### Best Practices
+
+- [Best practices for building Kubernetes Operators and stateful apps](https://cloud.google.com/blog/products/containers-kubernetes/best-practices-for-building-kubernetes-operators-and-stateful-apps) - Google Cloud
+- [7 Best Practices for Writing Kubernetes Operators: An SRE Perspective](https://www.openshift.com/blog/7-best-practices-for-writing-kubernetes-operators-an-sre-perspective) - Red Hat
+- [애플리케이션 자동화를 위한 쿠버네티스 오퍼레이터 개발](https://youtu.be/abHOcr-HTI4) - 한우형
+- [OpenShift Container Platform Operators](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.3/html-single/operators/index) - Red Hat
+
+### 더 읽을 거리
+
 - [Kubernetes operators for resource management](https://www.stephenzoio.com/kubernetes-operators-for-resource-management/)
 - [Tutorial: Deep Dive into the Operator Framework for...](https://youtu.be/8_DaCcRMp5I) - Melvin Hillsman, Michael Hrivnak, & Matt Dorn
 - [Learning Concurrent Reconciling](http://openkruise.io/en-us/blog/blog2.html) - FEI GUO
 - [Deep analysis of Kubebuilder: making writing CRD easier](https://laptrinhx.com/deep-analysis-of-kubebuilder-making-writing-crd-easier-3037683434/) - Liu Yang
-- [Kubernetes Kubebuilder를 이용한 Operator 개발](https://ssup2.github.io/programming/Kubernetes_Kubebuilder/) - ssup2
-- [Kubernetes Controller 구현해보기](https://getoutsidedoor.com/2020/05/09/kubernetes-controller-%EA%B5%AC%ED%98%84%ED%95%B4%EB%B3%B4%EA%B8%B0/) - zeroFruit
 - [Building an operator for Kubernetes with kubebuilder](https://itnext.io/building-an-operator-for-kubernetes-with-kubebuilder-17cbd3f07761) - Philippe Martin
 - [Writing a Kubernetes operator using Kubebuilder](https://youtu.be/Fp0QUf0Bwm0) - Velocity London 2018
 - [Under the hood of Kubebuilder framework](https://itnext.io/under-the-hood-of-kubebuilder-framework-ff6b38c10796) - CloudARK
 - [Building Cloud-Native Applications with Kubebuilder and Kind](https://caylent.com/building-cloud-native-applications-with-kubebuilder-and-kind) - Gabriel Garrido
 - [Building your own kubernetes CRDs](https://itnext.io/building-your-own-kubernetes-crds-701de1c9a161) - Pongsatorn Tonglairoum
 - [Kubebuilder v2 User Guide](https://www.programmersought.com/article/13635893077/)
+- [Writing and testing Kubernetes webhooks using Kubebuilder v2](https://ymmt2005.hatenablog.com/entry/2019/08/10/Writing_and_testing_Kubernetes_webhooks_using_Kubebuilder_v2)
+- [Kubernetes CRD Development Guide](https://developpaper.com/kubernetes-crd-development-guide/)
+- [Getting Started with Kubernetes | Operator and Operator Framework](https://www.alibabacloud.com/blog/getting-started-with-kubernetes-%7C-operator-and-operator-framework_596320) - Alibaba Cloud
 
 ## [Quickstart](https://book.kubebuilder.io/quick-start.html)
 
@@ -46,9 +63,10 @@ sudo mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
 export PATH=$PATH:/usr/local/kubebuilder/bin
 ```
 
-### 커스터마이즈 `Kustomize` 설치
+### `kustomize` 설치
 
 - [Docs](https://kubernetes-sigs.github.io/kustomize/installation/)
+- `kustomize`로 CRD를 생성합니다.
 
 ```bash
 curl -s "https://raw.githubusercontent.com/\
@@ -134,6 +152,17 @@ type Ruler struct {
 }
 ```
 
+### 큐브빌더의 마커(Marker)란?
+
+- 유틸리티 코드와 쿠버네티스 매니페스트 파일을 생성 시 메타 데이터 역할을 합니다.
+- 참고 자료
+  - [kubebuilder markers](https://book.kubebuilder.io/reference/markers.html)
+  - [kubernetes/code-generator](https://github.com/kubernetes/code-generator)
+
+```go
+// +<tag_name>[=value]
+```
+
 ### 매니페스트 생성
 
 ```bash
@@ -189,6 +218,8 @@ kubectl get rulers
 ```
 
 ### 컨트롤 루프 생성
+
+> 주의: 이 소스 코드는 Best Practice가 아닙니다. 테스트용으로만 사용해주세요.
 
 ```go
 // controllers/${kind}_controller.go
@@ -250,29 +281,43 @@ sudo kubectl apply -f config/samples/gc_v1alpha1_ruler.yaml
 sudo watch kubectl get ruler
 ```
 
-## TODO: 도커 이미지 빌드
+## 테스트
+
+### 도커 이미지 빌드
 
 ```bash
+sudo -i
 make
 make docker-build docker-push IMG=markruler/gc:0.1.0
-make deploy
 ```
 
-## TODO: Kind 클러스터에 배포
+### Kind 클러스터에 배포
 
 - [Kind 클러스터 생성](../bootstrap/kind.md)
 
-## TODO: 테스트
-
 ```bash
-
+make deploy IMG=markruler/gc:0.1.0
 ```
 
-## 큐브빌더의 마커(Marker)란?
+```bash
+kubectl apply -f config/samples/gc_v1alpha1_ruler.yaml
+watch kubectl get po
+```
 
-- [kubebuilder markers](https://book.kubebuilder.io/reference/markers.html)
-- [kubernetes/code-generator](https://github.com/kubernetes/code-generator)
+### Reconciliation 테스트
 
-```go
-// +<tag_name>[=value]
+```diff
+-  type: active
++  type: garbage
+```
+
+```bash
+kubectl apply -f config/samples/gc_v1alpha1_ruler.yaml
+```
+
+### Clean up
+
+```bash
+make uninstall
+kustomize build config/default | kubectl delet -f -
 ```
