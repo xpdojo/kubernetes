@@ -1,4 +1,11 @@
+### garbage ###
 .DS_Store
+dump.json
+
+### conf ###
 *.kubeconfig
 .env
-dump.json
+
+### build ###
+bin
+*.out

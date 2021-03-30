@@ -1,55 +1,17 @@
 # 쿠버네티스 오퍼레이터 제작하기 (with Kubebuilder)
 
 - [쿠버네티스 오퍼레이터 제작하기 (with Kubebuilder)](#쿠버네티스-오퍼레이터-제작하기-with-kubebuilder)
-  - [참고 자료](#참고-자료)
-    - [Best Practices](#best-practices)
-    - [더 읽을 거리](#더-읽을-거리)
   - [Quickstart](#quickstart)
     - [큐브빌더 `Kubebuilder` 설치](#큐브빌더-kubebuilder-설치)
     - [`kustomize` 설치](#kustomize-설치)
-    - [프로젝트 생성](#프로젝트-생성)
-    - [API 생성](#api-생성)
-    - [CRD 생성](#crd-생성)
-    - [큐브빌더의 마커(Marker)란?](#큐브빌더의-마커marker란)
-    - [매니페스트 생성](#매니페스트-생성)
-    - [컨트롤 루프 생성](#컨트롤-루프-생성)
-  - [테스트](#테스트)
+    - [스켈레톤 프로젝트 생성](#스켈레톤-프로젝트-생성)
+    - [API 리소스 개발](#api-리소스-개발)
+    - [컨트롤 루프 개발](#컨트롤-루프-개발)
+  - [컨트롤러 컨테이너화](#컨트롤러-컨테이너화)
     - [도커 이미지 빌드](#도커-이미지-빌드)
     - [Kind 클러스터에 배포](#kind-클러스터에-배포)
     - [Reconciliation 테스트](#reconciliation-테스트)
-    - [Clean up](#clean-up)
-
-## 참고 자료
-
-- [kubernetes-sigs/cluster-api](https://github.com/kubernetes-sigs/cluster-api)
-- [오퍼레이터 허브](https://operatorhub.io/)
-- [The Kubebuilder Book](https://book.kubebuilder.io/)
-- [Write a Kubernetes Operator in Go with Ellen Körbes](https://youtu.be/85dKpsFFju4) - Kinvolk
-- [Kubernetes Kubebuilder를 이용한 Operator 개발](https://ssup2.github.io/programming/Kubernetes_Kubebuilder/) - ssup2
-- [Kubernetes Controller 구현해보기](https://getoutsidedoor.com/2020/05/09/kubernetes-controller-%EA%B5%AC%ED%98%84%ED%95%B4%EB%B3%B4%EA%B8%B0/) - zeroFruit
-
-### Best Practices
-
-- [Best practices for building Kubernetes Operators and stateful apps](https://cloud.google.com/blog/products/containers-kubernetes/best-practices-for-building-kubernetes-operators-and-stateful-apps) - Google Cloud
-- [7 Best Practices for Writing Kubernetes Operators: An SRE Perspective](https://www.openshift.com/blog/7-best-practices-for-writing-kubernetes-operators-an-sre-perspective) - Red Hat
-- [애플리케이션 자동화를 위한 쿠버네티스 오퍼레이터 개발](https://youtu.be/abHOcr-HTI4) - 한우형
-- [OpenShift Container Platform Operators](https://access.redhat.com/documentation/en-us/openshift_container_platform/4.3/html-single/operators/index) - Red Hat
-
-### 더 읽을 거리
-
-- [Kubernetes operators for resource management](https://www.stephenzoio.com/kubernetes-operators-for-resource-management/)
-- [Tutorial: Deep Dive into the Operator Framework for...](https://youtu.be/8_DaCcRMp5I) - Melvin Hillsman, Michael Hrivnak, & Matt Dorn
-- [Learning Concurrent Reconciling](http://openkruise.io/en-us/blog/blog2.html) - FEI GUO
-- [Deep analysis of Kubebuilder: making writing CRD easier](https://laptrinhx.com/deep-analysis-of-kubebuilder-making-writing-crd-easier-3037683434/) - Liu Yang
-- [Building an operator for Kubernetes with kubebuilder](https://itnext.io/building-an-operator-for-kubernetes-with-kubebuilder-17cbd3f07761) - Philippe Martin
-- [Writing a Kubernetes operator using Kubebuilder](https://youtu.be/Fp0QUf0Bwm0) - Velocity London 2018
-- [Under the hood of Kubebuilder framework](https://itnext.io/under-the-hood-of-kubebuilder-framework-ff6b38c10796) - CloudARK
-- [Building Cloud-Native Applications with Kubebuilder and Kind](https://caylent.com/building-cloud-native-applications-with-kubebuilder-and-kind) - Gabriel Garrido
-- [Building your own kubernetes CRDs](https://itnext.io/building-your-own-kubernetes-crds-701de1c9a161) - Pongsatorn Tonglairoum
-- [Kubebuilder v2 User Guide](https://www.programmersought.com/article/13635893077/)
-- [Writing and testing Kubernetes webhooks using Kubebuilder v2](https://ymmt2005.hatenablog.com/entry/2019/08/10/Writing_and_testing_Kubernetes_webhooks_using_Kubebuilder_v2)
-- [Kubernetes CRD Development Guide](https://developpaper.com/kubernetes-crd-development-guide/)
-- [Getting Started with Kubernetes | Operator and Operator Framework](https://www.alibabacloud.com/blog/getting-started-with-kubernetes-%7C-operator-and-operator-framework_596320) - Alibaba Cloud
+  - [Clean up](#clean-up)
 
 ## [Quickstart](https://book.kubebuilder.io/quick-start.html)
 
@@ -74,7 +36,7 @@ kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
 sudo mv kustomize /usr/local/bin
 ```
 
-### 프로젝트 생성
+### 스켈레톤 프로젝트 생성
 
 ```bash
 go mod init markruler.com
@@ -98,7 +60,7 @@ kubebuilder init --domain markruler.com
 # $ kubebuilder create api
 ```
 
-### API 생성
+### API 리소스 개발
 
 - [Kubernetes API Group, Version, Resource](https://kubernetes.io/docs/reference/using-api)
 - [Kubernetes API Deprecation Policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/)
@@ -119,8 +81,6 @@ y
 # go vet ./...
 # go build -o bin/manager main.go
 ```
-
-### CRD 생성
 
 ```diff
 # api/v1alph1/${kind}_types.go
@@ -148,9 +108,9 @@ type Ruler struct {
 }
 ```
 
-### 큐브빌더의 마커(Marker)란?
+> 큐브빌더의 마커(Marker)란?
 
-- 유틸리티 코드와 쿠버네티스 매니페스트 파일을 생성 시 메타 데이터 역할을 합니다.
+- 유틸리티 코드와 쿠버네티스 매니페스트 파일을 생성하기 위한 메타 데이터입니다.
 - 참고 자료
   - [kubebuilder markers](https://book.kubebuilder.io/reference/markers.html)
   - [kubernetes/code-generator](https://github.com/kubernetes/code-generator)
@@ -159,7 +119,7 @@ type Ruler struct {
 // +<tag_name>[=value]
 ```
 
-### 매니페스트 생성
+- CRD 생성 및 배포
 
 ```bash
 sudo -i
@@ -181,6 +141,8 @@ kubectl api-resources | grep markruler
 # rulers                                         gc.markruler.com/v1alpha1         true         Ruler
 kubectl get rulers
 ```
+
+- 리소스 생성
 
 ```bash
 # bash
@@ -213,7 +175,7 @@ kubectl get rulers
 # sample   active
 ```
 
-### 컨트롤 루프 생성
+### 컨트롤 루프 개발
 
 > 주의: 이 소스 코드는 Best Practice가 아닙니다. 테스트용으로만 사용해주세요.
 
@@ -260,6 +222,8 @@ func (r *RulerReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 }
 ```
 
+- 컨트롤러 로컬 테스트
+
 ```bash
 make run
 # go: creating new go.mod: module tmp
@@ -270,14 +234,12 @@ make run
 # go vet ./...
 # /root/go/bin/controller-gen "crd:trivialVersions=true" rbac:roleName=manager-role webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 # go run ./main.go
-```
 
-```bash
 sudo kubectl apply -f config/samples/gc_v1alpha1_ruler.yaml
 sudo watch kubectl get ruler
 ```
 
-## 테스트
+## 컨트롤러 컨테이너화
 
 ### 도커 이미지 빌드
 
@@ -311,9 +273,9 @@ watch kubectl get po
 kubectl apply -f config/samples/gc_v1alpha1_ruler.yaml
 ```
 
-### Clean up
+## Clean up
 
 ```bash
 make uninstall
-kustomize build config/default | kubectl delet -f -
+kustomize build config/default | kubectl delete -f -
 ```
