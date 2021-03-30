@@ -7,7 +7,7 @@
     - [Operator](#operator)
   - [오퍼레이터는 상태 머신이 아니다](#오퍼레이터는-상태-머신이-아니다)
     - [상태 머신](#상태-머신)
-    - [쿠버네티스](#쿠버네티스)
+    - [쿠버네티스 오퍼레이터](#쿠버네티스-오퍼레이터)
   - [오퍼레이터 개발 방법](#오퍼레이터-개발-방법)
 
 [출처: 애플리케이션 자동화를 위한 쿠버네티스 오퍼레이터 개발 - 한우형](https://www.youtube.com/watch?v=abHOcr-HTI4)
@@ -47,13 +47,17 @@
 
 ## 오퍼레이터는 상태 머신이 아니다
 
+[상태 머신](https://en.wikipedia.org/wiki/Finite-state_machine)? A finite-state machine (FSM) or finite-state automaton (FSA, plural: automata), finite automaton, or simply a state machine, is a mathematical model of computation. It is an abstract machine that can be in exactly one of a finite number of states at any given time. The FSM can change from one state to another in response to some inputs; the change from one state to another is called a transition. An FSM is defined by a list of its states, its initial state, and the inputs that trigger each transition. Finite-state machines are of two types—deterministic finite-state machines and non-deterministic finite-state machines. A deterministic finite-state machine can be constructed equivalent to any non-deterministic one.
+
+![automata](../images/automata-theory.png)
+
 ### 상태 머신
 
 - f(now_state, input) = next_state
 - 상태의 종류가 정확히 정의되어 있다.
 - 상태에 따른 입력도 정의되어 있다.
 
-### 쿠버네티스
+### 쿠버네티스 오퍼레이터
 
 - 현재 상태는 항상 관측을 통해 얻는다.
 - 저장된 상태는 성능을 위해 존재한다.
