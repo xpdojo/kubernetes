@@ -53,9 +53,12 @@ cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 br_netfilter
 EOF
 
+# modprobe overlay
+modprobe br_netfilter
+
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
 EOF
 
 sudo sysctl --system
@@ -111,16 +114,15 @@ kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
 ```
 
 ```bash
+# on worker
 kubeadm reset
-```
-
-```bash
 iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
-iptables -L -v
+iptables -vL
 # ipvsadm -C
 ```
 
 ```bash
+# on control-plane
 kubectl delete node <node name>
 ```
 
@@ -132,6 +134,6 @@ kubeadm reset
 
 ```bash
 iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
-iptables -L -v
+iptables -vL
 # ipvsadm -C
 ```
