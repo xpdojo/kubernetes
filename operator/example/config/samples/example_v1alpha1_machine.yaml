@@ -1,0 +1,7 @@
+apiVersion: example.markruler.com/v1alpha1
+kind: Machine
+metadata:
+  name: machine-sample
+spec:
+  # role: garbage
+  role: worker

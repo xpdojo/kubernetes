@@ -1,7 +1,7 @@
 domain: markruler.com
 repo: markruler.com
 resources:
-- group: gc
-  kind: Ruler
+- group: example
+  kind: Machine
   version: v1alpha1
 version: "2"

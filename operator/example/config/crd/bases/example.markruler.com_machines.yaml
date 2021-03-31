@@ -6,27 +6,27 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: rulers.gc.markruler.com
+  name: machines.example.markruler.com
 spec:
   additionalPrinterColumns:
-  - JSONPath: .spec.type
-    name: type
+  - JSONPath: .spec.role
+    name: role
     type: string
-  - JSONPath: .status.mark
-    name: mark
+  - JSONPath: .status.ready
+    name: ready
     type: boolean
-  group: gc.markruler.com
+  group: example.markruler.com
   names:
-    kind: Ruler
-    listKind: RulerList
-    plural: rulers
-    singular: ruler
+    kind: Machine
+    listKind: MachineList
+    plural: machines
+    singular: machine
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Ruler is the Schema for the rulers API
+      description: Machine is the Schema for the machines API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -41,18 +41,18 @@ spec:
         metadata:
           type: object
         spec:
-          description: RulerSpec defines the desired state of Ruler
+          description: MachineSpec defines the desired state of Machine
           properties:
-            type:
+            role:
               type: string
           type: object
         status:
-          description: RulerStatus defines the observed state of Ruler
+          description: MachineStatus defines the observed state of Machine
           properties:
-            mark:
+            ready:
               type: boolean
           required:
-          - mark
+          - ready
           type: object
       type: object
   version: v1alpha1

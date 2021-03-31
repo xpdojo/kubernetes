@@ -23,39 +23,39 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// RulerSpec defines the desired state of Ruler
-type RulerSpec struct {
-	Type string `json:"type,omitempty"`
+// MachineSpec defines the desired state of Machine
+type MachineSpec struct {
+	Role string `json:"role,omitempty"`
 }
 
-// RulerStatus defines the observed state of Ruler
-type RulerStatus struct {
-	Mark bool `json:"mark"`
+// MachineStatus defines the observed state of Machine
+type MachineStatus struct {
+	Ready bool `json:"ready"`
 }
 
 // +kubebuilder:object:root=true
-// +kubebuilder:printcolumn:name="type",type=string,JSONPath=`.spec.type`
-// +kubebuilder:printcolumn:name="mark",type=boolean,JSONPath=`.status.mark`
+// +kubebuilder:printcolumn:name="role",type=string,JSONPath=`.spec.role`
+// +kubebuilder:printcolumn:name="ready",type=boolean,JSONPath=`.status.ready`
 // +kubebuilder:subresource:status
 
-// Ruler is the Schema for the rulers API
-type Ruler struct {
+// Machine is the Schema for the machines API
+type Machine struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   RulerSpec   `json:"spec,omitempty"`
-	Status RulerStatus `json:"status,omitempty"`
+	Spec   MachineSpec   `json:"spec,omitempty"`
+	Status MachineStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// RulerList contains a list of Ruler
-type RulerList struct {
+// MachineList contains a list of Machine
+type MachineList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Ruler `json:"items"`
+	Items           []Machine `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&Ruler{}, &RulerList{})
+	SchemeBuilder.Register(&Machine{}, &MachineList{})
 }

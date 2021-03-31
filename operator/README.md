@@ -121,8 +121,6 @@
   - [Metacontroller](https://metacontroller.github.io/metacontroller/)
   - [Helm Operator](https://github.com/fluxcd/helm-operator) - Flux CD
 
-> 영상에선 operator-sdk를 추천하지만 저는 [kubernetes-sigs/cluster-api](https://github.com/kubernetes-sigs/cluster-api)를 사용하면서 kubebuilder를 공부해야 했기 때문에 kubebuilder를 사용했습니다.
-
 - Operator Capability Level
 
 ![operator-capability-level](../images/operator-capability-level.png)
@@ -131,12 +129,14 @@ _출처: [Operator Framework](https://sdk.operatorframework.io/docs/overview/)_
 
 ## 오퍼레이터 철학
 
+TODO: 정리
+
 - 쿠버네티스의 SRE
 - 자동화 가능한 것: 당신의 컴퓨터가 할 작업
 
 ### 성공적인 오퍼레이터의 7가지 습관 - CoreOS
 
-> <쿠버네티스 오퍼레이터> 발췌
+> 책 <쿠버네티스 오퍼레이터> 발췌
 
 - 오퍼레이터는 하나의 쿠버네티스 디플로이먼트로 실행돼야 한다.
 - 오퍼레이터는 클러스터에 새로운 CRD를 정의해야 한다.

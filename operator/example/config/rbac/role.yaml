@@ -7,9 +7,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - gc.markruler.com
+  - example.markruler.com
   resources:
-  - rulers
+  - machines
   verbs:
   - create
   - delete
@@ -19,9 +19,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gc.markruler.com
+  - example.markruler.com
   resources:
-  - rulers/status
+  - machines/status
   verbs:
   - get
   - patch
