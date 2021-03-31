@@ -9,6 +9,7 @@
 ## `NodePort` 보다 `LoadBalancer`가 좋은 점
 
 - 노드의 IP와 Port를 노출시켜야 할 부담이 없다.
+- TODO: 정리
 
 ## 테스트를 위한 Kind 클러스터 생성
 
@@ -56,13 +57,18 @@ kubectl get po -A -o wide
 kubectl expose deploy test-nginx --type=LoadBalancer --port=3000 --target-port=80
 ```
 
+- `EXTERNAL-IP`가 아직 pending 상태입니다.
+
 ```bash
 kubectl get svc -l=app=test-nginx
-# NAME         TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-# test-nginx   LoadBalancer   10.109.69.63   <pending>     80:32612/TCP   10m
+# NAME         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+# test-nginx   LoadBalancer   10.96.103.219   <pending>     3000:30828/TCP   3m3s
 ```
 
 ```bash
+docker network inspect -f '{{.IPAM.Config}}' kind
+# [{172.18.0.0/16  172.18.0.1 map[]} {fc00:f853:ccd:e793::/64  fc00:f853:ccd:e793::1 map[]}]
+
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: ConfigMap
@@ -75,7 +81,7 @@ data:
     - name: default
       protocol: layer2
       addresses:
-      - 192.168.7.196-192.168.7.200
+      - 172.18.255.200-172.18.255.250
 EOF
 ```
 
@@ -87,6 +93,14 @@ kubectl get cm -n metallb-system
 
 ```bash
 kubectl get svc -l=app=test-nginx
-# NAME         TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)        AGE
-# test-nginx   LoadBalancer   10.109.69.63   192.168.7.197   80:32612/TCP   11m
+# NAME         TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE
+# test-nginx   LoadBalancer   10.96.103.219   172.18.255.200   3000:30828/TCP   7m55s
+
+kubectl get svc/test-nginx -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
+# 172.18.255.200⏎
+```
+
+```bash
+curl 172.18.255.200:3000
+# Welcome to nginx!
 ```
