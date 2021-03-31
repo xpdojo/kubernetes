@@ -34,8 +34,21 @@ mv ./kind /some-dir-in-your-PATH/kind
 ## kind 클러스터 생성
 
 ```bash
-# sudo kind create cluster --name operator-test --image kindest/node:1.18.12
-sudo kind create cluster --config ./bootstrap/kind-default.yaml
+# kind create cluster -v=6 --name test --image kindest/node:1.18.15
+# kind create cluster -v=6 --config ./bootstrap/kind-default.yaml
+cat <<EOF | kind create cluster --config -
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  image: kindest/node:v1.18.15
+- role: worker
+  image: kindest/node:v1.18.15
+- role: worker
+  image: kindest/node:v1.18.15
+- role: worker
+  image: kindest/node:v1.18.15
+EOF
 ```
 
 ```bash
