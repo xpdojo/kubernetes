@@ -86,9 +86,9 @@ clusterctl config cluster \
 
 ### 오픈스택 Key Pair
 
-![openstack-key-pair](images/openstack-key-pair.jpeg)
+![openstack-key-pair](../../../images/environment/openstack-key-pair.jpeg)
 
-![openstack-image](images/openstack-image.jpeg)
+![openstack-image](../../../images/environment/openstack-image.jpeg)
 
 ```bash
 mv openstack-provider.pem $HOME/.ssh/

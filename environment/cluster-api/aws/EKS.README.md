@@ -134,7 +134,7 @@ kubectl get ev
 # 17m         Normal   SuccessfulCreate                               machinedeployment/capi-aws-eks-md-0                 Created MachineSet "capi-aws-eks-md-0-5845d47fc6"
 ```
 
-![creating-eks-cluster](images/creating-eks-cluster.png)
+![creating-eks-cluster](../../../images/environment/creating-eks-cluster.png)
 
 - 컨트롤 플레인 1, 워커 노드 1 생성 완료까지 대략 17분 소요
 - 컨트롤 플레인 1, 워커 노드 2 생성 완료까지 대략 20-30분 소요
@@ -177,11 +177,11 @@ clusterctl describe cluster --show-conditions=all --disable-grouping --disable-n
 #                     └─SecurityGroupsReady                         True                     9m46s
 ```
 
-![ready-eks](images/ready-eks.png)
+![ready-eks](../../../images/environment/ready-eks.png)
 
-![eks-nodes](images/ready-eks-nodes.png)
+![eks-nodes](../../../images/environment/ready-eks-nodes.png)
 
-![eks-workloads](images/ready-eks-workloads.png)
+![eks-workloads](../../../images/environment/ready-eks-workloads.png)
 
 - API 리소스가 EC2 기반 클러스터와 약간 다릅니다.
 
@@ -274,7 +274,7 @@ kubectl --kubeconfig=aws/eks.kubeconfig get pods -A -o wide
 kubectl delete cluster capa-test
 ```
 
-![deleting-eks-cluster](images/deleting-eks-cluster.png)
+![deleting-eks-cluster](../../../images/environment/deleting-eks-cluster.png)
 
 ```bash
 # clusterctl delete --infrastructure aws --control-plane aws-eks --bootstrap aws-eks

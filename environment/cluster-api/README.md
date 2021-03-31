@@ -18,7 +18,7 @@
 현재 [다양한 컨트롤러](https://github.com/kubernetes-sigs/cluster-api/tree/master/docs/book/src/developer/architecture/controllers)가 개발되었습니다.
 아래 다이어그램는 매니지먼트 클러스터가 Cluster API 컨트롤러를 통해 워크로드 클러스터(각 프로바이더)를 관리하는 형상입니다.
 
-![management-workload-separate-clusters](../images/cluster/management-workload-separate-clusters.png)
+![management-workload-separate-clusters](../../images/cluster/management-workload-separate-clusters.png)
 
 _[출처: The Cluster API Book](https://cluster-api.sigs.k8s.io/reference/versions.html)_
 

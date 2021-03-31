@@ -131,7 +131,7 @@ export AWS_B64ENCODED_CREDENTIALS=$(clusterawsadm bootstrap credentials encode-a
 - [verbosity 5](https://github.com/kubernetes-sigs/cluster-api/issues/3351#issuecomment-660290631)
 - [Enabling EKS Support](https://cluster-api-aws.sigs.k8s.io/topics/eks/enabling.html)
 
-![clusterctl-init](../../images/cluster/clusterctl-init.png)
+![clusterctl-init](../../../images/cluster/clusterctl-init.png)
 
 _출처: [(proposal) Clusterctl redesign - Improve user experience and management across Cluster API providers](https://github.com/kubernetes-sigs/cluster-api/blob/release-0.3/docs/proposals/20191016-clusterctl-redesign.md)_
 
@@ -173,7 +173,7 @@ clusterctl init --infrastructure aws -v 5
 > control-plane 노드를 짝수로 설정하면 오류가 발생합니다.\
 > spec.replicas: Forbidden: cannot be an even number when using managed etcd
 
-![clusterctl-create-cluster](../../images/cluster/clusterctl-create-cluster.png)
+![clusterctl-create-cluster](../../../images/cluster/clusterctl-create-cluster.png)
 
 _출처: [(proposal) Clusterctl redesign - Improve user experience and management across Cluster API providers](https://github.com/kubernetes-sigs/cluster-api/blob/release-0.3/docs/proposals/20191016-clusterctl-redesign.md)_
 
