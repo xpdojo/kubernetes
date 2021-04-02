@@ -9,3 +9,4 @@ dump.json
 ### build ###
 bin
 *.out
+__pycache__
