@@ -1,0 +1,19 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: yna-crawler
+  labels:
+    app: yna-crawler
+spec:
+  schedule: "0 * * * *" # hourly (https://crontab.guru/)
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: yna-crawler
+              image: 192.168.7.191:5000/yna-crawler:0.1.0
+              imagePullPolicy: Always
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3

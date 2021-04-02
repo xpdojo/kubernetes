@@ -1,0 +1,7 @@
+version: "3"
+services:
+  crawler:
+    container_name: crawler
+    build:
+      context: .
+      dockerfile: ./Dockerfile
