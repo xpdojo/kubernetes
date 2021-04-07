@@ -36,7 +36,7 @@ EOF
 ```
 
 - cgroup driver의 기본값이 `cgoupfs`이기 때문에 변경해준다.
-- `systemd`를 사용하는 이유?
+- `systemd`를 사용해야 하는 이유는 없다. 다만 같이 쓰지 않도록 주의한다. [참고](https://tech.kakao.com/2020/06/29/cgroup-driver/)
 
 ```bash
 systemctl restart docker
@@ -84,7 +84,7 @@ br_netfilter
 EOF
 ```
 
-- 커널 모듈 `br_netfilter`은 `bridge`를 지나는 패킷이 `iptables`에 의해 제어되도록 한다.
+- 커널 모듈 `br_netfilter`는 `bridge`를 지나는 패킷이 `iptables`에 의해 제어되도록 한다.
 - `modprobe`를 사용할 수 있지만 `systemd`로도 설정할 수 있다.
   - 위와 같은 `.conf` 파일을 작성하면 시스템을 리부팅하더라도 자동으로 모듈이 로딩된다.
 
