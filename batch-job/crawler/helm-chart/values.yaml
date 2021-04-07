@@ -1,0 +1,38 @@
+replicaCount: 1
+
+image:
+  repository: 192.168.7.191:5000/yna-crawler:latest
+  pullPolicy: Always # IfNotPresent
+
+serviceAccount:
+  create: false
+  annotations: {}
+  name: spider
+
+service:
+  type: ClusterIP
+  port: 18979
+
+cronJob:
+  schedule: "0 * * * *" # hourly (https://crontab.guru/)
+
+configMap:
+  create: false
+  name: "configmap-crawler"
+  files: "files/settings.py"
+
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podSecurityContext: {}
+securityContext: {}

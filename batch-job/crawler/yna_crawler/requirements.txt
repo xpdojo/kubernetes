@@ -1,4 +1,4 @@
-konlpy==0.5.2
 elasticsearch==7.12.0
 Twisted==21.2.0
 Scrapy==2.4.1
+konlpy==0.5.2

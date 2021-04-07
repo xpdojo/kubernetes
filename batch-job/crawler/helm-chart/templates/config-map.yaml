@@ -1,0 +1,10 @@
+{{- if .Values.configMap.create -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMap.name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  settings.py: |-
+{{ .Files.Get .Values.configMap.files | indent 4 }}
+{{- end -}}

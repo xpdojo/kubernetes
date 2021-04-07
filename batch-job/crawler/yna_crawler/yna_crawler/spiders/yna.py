@@ -34,7 +34,8 @@ class YnaSpider(CrawlSpider):
       yield scrapy.Request(url=url, callback=self.parse, errback=self.error_page)
 
   def parse(self, response):
-    for i in range(1, 21):  # 1~20
+    # for i in range(1, 21):  # 1~20
+    for i in range(1, 2):
       yield response.follow(self.news_url + str(i), self.parse_page)
 
   def parse_page(self, response):
@@ -69,6 +70,7 @@ class YnaSpider(CrawlSpider):
       item['news_category'] = self.text_escape(response.xpath('//*[@id="articleWrap"]/div[1]/header/ul[1]/li[2]/a/text()').get())
       item['article_date'] = article_date_datetime
       item['crawled_date'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+09:00")
+      logging.debug(item['content'])
 
       yield item
 

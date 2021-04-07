@@ -10,6 +10,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.client.ingest import IngestClient
 from scrapy.utils.project import get_project_settings
 from konlpy.tag import Okt
+import logging
 
 
 class YnaCrawlerPipeline(object):
@@ -22,7 +23,7 @@ class YnaCrawlerPipeline(object):
                                                  self.settings['ELASTICSEARCH_PASSWORD']))
 
   def process_item(self, item, _spider):
-    index_name = 'hw_news_yna_total_' + datetime.datetime.now().strftime('%Y%m')
+    index_name = 'yna_news_total_' + datetime.datetime.now().strftime('%Y%m')
 
     doc = dict(item)
 
@@ -56,6 +57,7 @@ class YnaCrawlerPipeline(object):
       words.append("")
 
     doc['analyzed_words'] = words
+    logging.debug(doc)
 
     self.es.index(index=index_name, doc_type='string', body=doc, pipeline="timestamp")
     self.es.indices.refresh(index=index_name)

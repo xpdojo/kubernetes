@@ -1,0 +1,6 @@
+apiVersion: v2
+name: crawler
+description: A Helm chart for crawler
+type: application
+version: 0.1.0
+appVersion: latest #0.1.0

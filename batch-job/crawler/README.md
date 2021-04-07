@@ -152,6 +152,12 @@ registry:2.7.1
 
 ```bash
 systemctl restart docker
+```
+
+```bash
+docker builder prune --all --force
+docker image prune
+docker container prune
 
 docker build . -t 192.168.7.191:5000/yna-crawler
 docker push 192.168.7.191:5000/yna-crawler
@@ -160,6 +166,7 @@ docker push 192.168.7.191:5000/yna-crawler
 ### NFS Provisioner
 
 ```bash
+# on master, worker nodes
 # apt-get install -y nfs-common
 yum install -y nfs-utils
 
@@ -169,6 +176,8 @@ helm --kubeconfig=$KUBE_CONFIG install storage stable/nfs-client-provisioner \
 ```
 
 - troubleshooting
+
+`nfs-utils`나 `nfs-common`을 노드마다 설치하지 않으면 아래와 같이 에러가 날 수 있다.
 
 ```bash
 # Warning  FailedMount  57s (x9 over 3m5s)  kubelet            MountVolume.SetUp failed for volume "nfs-client-root" : mount failed: exit status 32
@@ -197,7 +206,7 @@ dmesg | tail
 
 ### Elasticsearch
 
-- Elasticsearch
+- [Install Elasticsearch](../../observability/logging/elastic-cloud/install.md)
 
 ### CronJob
 

@@ -1,0 +1,4 @@
+FROM python:3.9.2-slim-buster
+COPY yna_crawler /yna_crawler
+RUN pip3 install --requirement /yna_crawler/requirements.txt --verbose --no-cache-dir
+ENTRYPOINT [ "python3", "/yna_crawler/yna_crawler/runner.py" ]

@@ -1,0 +1,32 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "crawler.fullname" . }}
+  labels:
+    app: crawler
+spec:
+  schedule: "{{ .Values.cronJob.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: {{ .Chart.Name }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              {{- if .Values.configMap.create }}
+              volumeMounts:
+                - name: crawler-conf
+                  mountPath: /yna_crawler/yna_crawler/
+              {{- end }}
+          {{- if .Values.configMap.create }}
+          volumes:
+            - name: crawler-conf
+              configMap:
+                name: {{ .Values.configMap.name }}
+          {{- end }}
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
