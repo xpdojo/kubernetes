@@ -1,4 +1,4 @@
-elasticsearch==7.12.0
-Twisted==21.2.0
+elasticsearch==7.11.0
+Twisted==20.3.0
 Scrapy==2.4.1
 konlpy==0.5.2

@@ -10,4 +10,4 @@ dump.json
 bin
 *.out
 __pycache__
-.tar
+*.tar

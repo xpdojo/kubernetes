@@ -67,11 +67,11 @@ ITEM_PIPELINES = {
     'yna_crawler.pipelines.YnaCrawlerPipeline': 300,
 }
 
-ELASTICSEARCH_PROTOCOL = 'http'
-ELASTICSEARCH_HOST = '192.168.7.204'
-ELASTICSEARCH_PORT = 9200
-ELASTICSEARCH_USERNAME = 'elastic'
-ELASTICSEARCH_PASSWORD = 'elastic'
+# ELASTICSEARCH_PROTOCOL = 'http'
+# ELASTICSEARCH_HOST = 'elasticsearch-master'
+# ELASTICSEARCH_PORT = 9200
+# ELASTICSEARCH_USERNAME = 'elastic'
+# ELASTICSEARCH_PASSWORD = 'elastic'
 
 LOG_STDOUT = True
 # LOG_FILE = '/var/log/crawler.log'

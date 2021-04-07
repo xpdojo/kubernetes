@@ -6,21 +6,25 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
 import datetime
+import os
+
 from elasticsearch import Elasticsearch
 from elasticsearch.client.ingest import IngestClient
+
 from scrapy.utils.project import get_project_settings
 from konlpy.tag import Okt
+
 import logging
 
 
 class YnaCrawlerPipeline(object):
   def __init__(self):
     self.settings = get_project_settings()
-    self.uri = "%s://%s:%d" % (self.settings['ELASTICSEARCH_PROTOCOL'],
-                               self.settings['ELASTICSEARCH_HOST'],
-                               self.settings['ELASTICSEARCH_PORT'])
-    self.es = Elasticsearch(self.uri, http_auth=(self.settings['ELASTICSEARCH_USERNAME'],
-                                                 self.settings['ELASTICSEARCH_PASSWORD']))
+    self.uri = "%s://%s:%d" % (os.environ['ELASTICSEARCH_PROTOCOL'],
+                               os.environ['ELASTICSEARCH_HOST'],
+                               os.environ['ELASTICSEARCH_PORT'])
+    self.es = Elasticsearch(self.uri, http_auth=(os.environ['ELASTICSEARCH_USERNAME'],
+                                                 os.environ['ELASTICSEARCH_PASSWORD']))
 
   def process_item(self, item, _spider):
     index_name = 'yna_news_total_' + datetime.datetime.now().strftime('%Y%m')
@@ -53,8 +57,8 @@ class YnaCrawlerPipeline(object):
       if len(noun) == 1:
         words.remove(noun)
 
-    if len(words) == 0:
-      words.append("")
+      if len(words) == 0:
+        words.append("")
 
     doc['analyzed_words'] = words
     logging.debug(doc)

@@ -10,6 +10,7 @@
   - [docker registry](#docker-registry)
     - [NFS Provisioner](#nfs-provisioner)
     - [Elasticsearch](#elasticsearch)
+    - [Secret](#secret)
     - [CronJob](#cronjob)
     - [크론 스케줄 문법](#크론-스케줄-문법)
 
@@ -208,6 +209,29 @@ dmesg | tail
 
 - [Install Elasticsearch](../../observability/logging/elastic-cloud/install.md)
 
+### Secret
+
+```bash
+# kubectl create secret generic dev-db-secret \
+#   --from-literal=username='elastic' \
+#   --from-literal=password='elastic'
+
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.secret.name }}
+type: {{ .Values.secret.type }}
+data: # echo -n 'key' | base64
+  username: {{ .Values.secret.elastic.username | b64enc }}
+  password: {{ .Values.secret.elastic.password | b64enc }}
+stringData: # strings will be encoded 'helm template batch-job/crawler/helm-chart'
+  host: {{ .Values.secret.elastic.host }}
+  port: {{ quote .Values.secret.elastic.port }}
+
+EOF
+```
+
 ### CronJob
 
 ```bash
@@ -229,6 +253,29 @@ spec:
             - name: yna-crawler
               image: 192.168.7.191/yna-crawler:0.1.0
               imagePullPolicy: Always
+              env:
+                - name: ELASTICSEARCH_PROTOCOL
+                  value: {{ .Values.secret.elastic.protocol }}
+                - name: ELASTICSEARCH_HOST
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secret.name }}
+                      key: host
+                - name: ELASTICSEARCH_PORT
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secret.name }}
+                      key: port
+                - name: ELASTICSEARCH_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secret.name }}
+                      key: username
+                - name: ELASTICSEARCH_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secret.name }}
+                      key: password
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
 EOF

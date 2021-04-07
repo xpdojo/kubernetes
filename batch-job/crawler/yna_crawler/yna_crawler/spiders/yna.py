@@ -3,9 +3,8 @@
 import scrapy
 
 from scrapy.utils.project import get_project_settings
-from scrapy.spiders import CrawlSpider
-
 from scrapy.spidermiddlewares.httperror import HttpError
+
 from twisted.internet.error import TimeoutError, TCPTimedOutError
 from twisted.internet.error import DNSLookupError
 
@@ -16,7 +15,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
-class YnaSpider(CrawlSpider):
+class YnaSpider(scrapy.Spider):
   name = 'yna_spider'
   crawler_id = 'yna_crawler'
   board_id = 'news_yna'
@@ -34,8 +33,10 @@ class YnaSpider(CrawlSpider):
       yield scrapy.Request(url=url, callback=self.parse, errback=self.error_page)
 
   def parse(self, response):
-    # for i in range(1, 21):  # 1~20
-    for i in range(1, 2):
+    # for i in range(2, 0, -1): # 2->1
+    # for i in range(1, 21):  # 1->20
+    for i in range(1, 2):  # 1
+      # logging.debug(i)
       yield response.follow(self.news_url + str(i), self.parse_page)
 
   def parse_page(self, response):
@@ -55,24 +56,25 @@ class YnaSpider(CrawlSpider):
     article_date = response.xpath('//*[@id="articleWrap"]/div[1]/header/p/text()').get()
     logging.debug(article_date)
     article_date_time = datetime.strptime(article_date, '%Y-%m-%d %H:%M')
-    hour_ago_date = (datetime.now() + timedelta(hours=-1)).replace(minute=0, second=0, microsecond=0)
-    now_date = datetime.now().replace(minute=0, second=0, microsecond=0)
+    # 컨테이너 시간을 KST로 지정해야 합니다.
+    # hour_ago_date = (datetime.now() + timedelta(hours=-1)).replace(minute=0, second=0, microsecond=0)
+    # now_date = datetime.now().replace(minute=0, second=0, microsecond=0)
 
-    if hour_ago_date <= article_date_time and article_date_time < now_date:
-      item = {}
+    # if hour_ago_date <= article_date_time and article_date_time < now_date:
+    item = {}
 
-      url = response.request.url
-      article_date_datetime = article_date_time.strftime("%Y-%m-%dT%H:%M:%S+09:00")
+    url = response.request.url
+    article_date_datetime = article_date_time.strftime("%Y-%m-%dT%H:%M:%S+09:00")
 
-      item['title'] = self.text_escape(response.xpath('//*[@id="articleWrap"]/div[1]/header/h1/text()').get())
-      item['content'] = self.text_escape(response.xpath('//*[@id="articleWrap"]/div[2]/div/div/article/p/text()').extract())
-      item['url'] = url
-      item['news_category'] = self.text_escape(response.xpath('//*[@id="articleWrap"]/div[1]/header/ul[1]/li[2]/a/text()').get())
-      item['article_date'] = article_date_datetime
-      item['crawled_date'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+09:00")
-      logging.debug(item['content'])
+    item['title'] = self.text_escape(response.xpath('//*[@id="articleWrap"]/div[1]/header/h1/text()').get())
+    item['content'] = self.text_escape(response.xpath('//*[@id="articleWrap"]/div[2]/div/div/article/p/text()').extract())
+    item['url'] = url
+    item['news_category'] = self.text_escape(response.xpath('//*[@id="articleWrap"]/div[1]/header/ul[1]/li[2]/a/text()').get())
+    item['article_date'] = article_date_datetime
+    item['crawled_date'] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+09:00")
+    logging.debug(item['content'])
 
-      yield item
+    yield item
 
   def text_escape(self, texts):
     result_text = ''

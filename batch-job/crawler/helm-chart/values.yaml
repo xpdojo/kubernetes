@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: 192.168.7.191:5000/yna-crawler:latest
+  repository: 192.168.7.191:5000/crawler
   pullPolicy: Always # IfNotPresent
 
 serviceAccount:
@@ -16,11 +16,20 @@ service:
 cronJob:
   schedule: "0 * * * *" # hourly (https://crontab.guru/)
 
+secret:
+  name: elastic-secret
+  type: Opaque
+  elastic:
+    protocol: http
+    host: elasticsearch-master
+    port: 9200
+    username: elastic
+    password: elastic
+
 configMap:
   create: false
   name: "configmap-crawler"
   files: "files/settings.py"
-
 
 resources: {}
 
