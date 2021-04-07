@@ -70,6 +70,13 @@ calicoctl node status
 - `eth0`나 `eno0` 같은 인터페이스만 감지할 수 있는지 모르겠지만...호스트 머신의 이더넷 인터페이스를 명시해주면 된다.
 - 만약 리눅스 배포판이 다르고 인터페이스명이 다르다면?
 - [Docs](https://docs.projectcalico.org/networking/node) - Calico
+- [ip-autodetection](https://docs.projectcalico.org/networking/ip-autodetection#change-the-autodetection-method) - Calico
+
+```bash
+# kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=can-reach=www.google.com
+# kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=interface=eno.*,eth0
+kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=cidr=192.168.0.0/16
+```
 
 ```diff
   # https://docs.projectcalico.org/manifests/calico.yaml

@@ -1,26 +1,17 @@
 # Elastic Cluster on Kubernetes (ECK)
 
 - [Elastic Cluster on Kubernetes (ECK)](#elastic-cluster-on-kubernetes-eck)
+  - [Configure Storage](#configure-storage)
   - [Install Elastic Stack using Helm](#install-elastic-stack-using-helm)
   - [Install Elastic Stack using Operator](#install-elastic-stack-using-operator)
 
+## Configure Storage
+
+- [NFS Provisioner](../../../container-storage/nfs-provisioner/README.md)
+
 ## Install Elastic Stack using Helm
 
-- [Docs](https://github.com/elastic/helm-charts/blob/master/elasticsearch/README.md)
-
-```bash
-helm repo add elastic https://helm.elastic.co
-helm repo update
-helm install elasticsearch elastic/elasticsearch
-helm install kibana elastic/kibana
-```
-
-- 차트만 다운로드 받고 싶다면
-
-```bash
-helm pull elasticsearch elastic/elasticsearch
-helm pull kibana elastic/kibana
-```
+- [elastic/helm-charts](helm/README.md)
 
 ## Install Elastic Stack using Operator
 

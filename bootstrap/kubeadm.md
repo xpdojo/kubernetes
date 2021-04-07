@@ -3,7 +3,7 @@
 - [Creating a cluster with kubeadm](#creating-a-cluster-with-kubeadm)
   - [Create Cluster](#create-cluster)
     - [Ubuntu 20.04](#ubuntu-2004)
-    - [Enable network bridge for k8s](#enable-network-bridge-for-k8s)
+    - [Configure network bridge for k8s](#configure-network-bridge-for-k8s)
     - [Control Plane](#control-plane)
     - [Worker Node](#worker-node)
   - [Clean up](#clean-up)
@@ -26,10 +26,17 @@ cat > /etc/docker/daemon.json <<EOF
 {
   "data-root": "/mnt/docker-data",
   "storage-driver": "overlay2",
-  "exec-opts": ["native.cgroupdriver=systemd"]
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "insecure-registries": [
+    "worker01:5000",
+    "192.168.7.191:5000",
+  ]
 }
 EOF
 ```
+
+- cgroup driver의 기본값이 `cgoupfs`이기 때문에 변경해준다.
+- `systemd`를 사용하는 이유?
 
 ```bash
 systemctl restart docker
@@ -46,16 +53,42 @@ apt-get install kubeadm=1.18.17-00
 apt-mark hold kubelet kubeadm kubectl
 ```
 
-### Enable network bridge for k8s
+```bash
+swapoff -a
+sed -e '/swap/s/^/#/g' -i /etc/fstab
+```
+
+- [kubernetes/issues/7294](https://github.com/kubernetes/kubernetes/issues/7294)
+- [kubernetes/issues/53533](https://github.com/kubernetes/kubernetes/issues/53533)
+- 파드의 QoS, Automatic bin packing, 예측 가능성, 일관성, 성능 저하
 
 ```bash
+setenforce 0
+sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+```
+
+```bash
+systemctl stop firewalld
+systemctl disable firewalld
+systemctl is-enabled firewalld
+```
+
+### Configure network bridge for k8s
+
+```bash
+# modprobe overlay
+# modprobe br_netfilter
+
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 br_netfilter
 EOF
+```
 
-# modprobe overlay
-modprobe br_netfilter
+- 커널 모듈 `br_netfilter`은 `bridge`를 지나는 패킷이 `iptables`에 의해 제어되도록 한다.
+- `modprobe`를 사용할 수 있지만 `systemd`로도 설정할 수 있다.
+  - 위와 같은 `.conf` 파일을 작성하면 시스템을 리부팅하더라도 자동으로 모듈이 로딩된다.
 
+```bash
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -64,11 +97,40 @@ EOF
 sudo sysctl --system
 ```
 
+- [참고](https://wiki.libvirt.org/page/Net.bridge.bridge-nf-call_and_sysctl.conf)
+- These control whether or not packets traversing the `bridge` are sent to iptables for processing.
+- `0`으로 설정하면 `bridge` 네트워크로 송수신되는 패킷이 `iptables` 규칙을 우회한다.
+- `1`로 설정하면 `bridge` 네트워크로 송수신되는 패킷이 `iptables` 규칙에 따라 제어된다.
+
 ### Control Plane
 
 ```bash
 kubeadm init
 # kubectl taint nodes --all node-role.kubernetes.io/master-
+```
+
+- Config 파일 정의하기
+
+```bash
+kubeadm config images list
+
+# https://godoc.org/k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm/v1beta2#ClusterConfiguration
+cat > $HOME/pkg/kubeadm-config.yaml << EOF
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: "v1.18.15"
+networking:
+  podSubnet: "10.233.0.0/18"
+  serviceSubnet: "10.233.64.0/18"
+apiServer:
+  extraArgs:
+    advertise-address: "192.168.7.191"
+controlPlaneEndpoint: "192.168.7.191:6443" 
+clusterName: "cluster.name"
+EOF
+
+# kubeadm init --service-cidr=10.233.0.0/18 --pod-network-cidr=10.233.64.0/18 --apiserver-advertise-address=192.168.7.191 --kubernetes-version=1.18.15 --v=5
+kubeadm init --config=$HOME/pkg/kubeadm-config.yaml --upload-certs --v=5
 ```
 
 - [token](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-token/)
