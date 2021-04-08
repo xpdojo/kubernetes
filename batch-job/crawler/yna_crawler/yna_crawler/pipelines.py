@@ -12,19 +12,20 @@ from elasticsearch import Elasticsearch
 from elasticsearch.client.ingest import IngestClient
 
 from scrapy.utils.project import get_project_settings
+from scrapy.utils.log import logger #, configure_logging
+
 from konlpy.tag import Okt
 
-import logging
 
 
 class YnaCrawlerPipeline(object):
   def __init__(self):
     self.settings = get_project_settings()
-    self.uri = "%s://%s:%d" % (os.environ['ELASTICSEARCH_PROTOCOL'],
-                               os.environ['ELASTICSEARCH_HOST'],
-                               os.environ['ELASTICSEARCH_PORT'])
-    self.es = Elasticsearch(self.uri, http_auth=(os.environ['ELASTICSEARCH_USERNAME'],
-                                                 os.environ['ELASTICSEARCH_PASSWORD']))
+    self.uri = "%s://%s:%s" % (os.getenv('ELASTICSEARCH_PROTOCOL', 'http'),
+                               os.getenv('ELASTICSEARCH_HOST', '127.0.0.1'),
+                               os.getenv('ELASTICSEARCH_PORT', '9200'))
+    self.es = Elasticsearch(self.uri, http_auth=(os.getenv('ELASTICSEARCH_USERNAME', 'elastic'),
+                                                 os.getenv('ELASTICSEARCH_PASSWORD', 'elastic')))
 
   def process_item(self, item, _spider):
     index_name = 'yna_news_total_' + datetime.datetime.now().strftime('%Y%m')
@@ -61,7 +62,7 @@ class YnaCrawlerPipeline(object):
         words.append("")
 
     doc['analyzed_words'] = words
-    logging.debug(doc)
+    logger.debug("doc:\n%s", doc)
 
     self.es.index(index=index_name, doc_type='string', body=doc, pipeline="timestamp")
     self.es.indices.refresh(index=index_name)

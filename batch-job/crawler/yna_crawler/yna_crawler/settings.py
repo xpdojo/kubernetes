@@ -4,16 +4,14 @@
 # https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'yna_crawler'
-
+BOT_NAME = 'crawler'
 SPIDER_MODULES = ['yna_crawler.spiders']
-NEWSPIDER_MODULE = 'yna_crawler.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 # USER_AGENT = 'agent (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+# ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # CONCURRENT_REQUESTS = 32
@@ -21,11 +19,11 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.5
+# DOWNLOAD_DELAY = 0.5
 
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_IP = 16
-CONCURRENT_REQUESTS_PER_DOMAIN = 2
+# CONCURRENT_REQUESTS_PER_DOMAIN = 2
 
 # Disable cookies (enabled by default)
 # COOKIES_ENABLED = False
@@ -59,21 +57,18 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 2
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#    'yna_crawler.pipelines.YnaCrawlerPipeline': 300,
-# }
-
 ITEM_PIPELINES = {
     'yna_crawler.pipelines.YnaCrawlerPipeline': 300,
 }
 
 # ELASTICSEARCH_PROTOCOL = 'http'
-# ELASTICSEARCH_HOST = 'elasticsearch-master'
+# ELASTICSEARCH_HOST = 192.168.7.204 # 'elasticsearch-master'
 # ELASTICSEARCH_PORT = 9200
 # ELASTICSEARCH_USERNAME = 'elastic'
 # ELASTICSEARCH_PASSWORD = 'elastic'
 
-LOG_STDOUT = True
+# https://docs.scrapy.org/en/latest/topics/settings.html#std-setting-LOG_STDOUT
+# LOG_STDOUT = True
 # LOG_FILE = '/var/log/crawler.log'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -97,4 +92,4 @@ LOG_STDOUT = True
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-FEED_EXPORT_ENCODING = 'utf-8'
+# FEED_EXPORT_ENCODING = 'utf-8'

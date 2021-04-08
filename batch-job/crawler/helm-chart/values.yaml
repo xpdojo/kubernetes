@@ -13,18 +13,30 @@ service:
   type: ClusterIP
   port: 18979
 
+# https://crontab.guru/
 cronJob:
-  schedule: "0 * * * *" # hourly (https://crontab.guru/)
+  schedule: "* * * * *" # At every minute
+  # schedule: "0 * * * *" # At minite 0 (hourly)
 
 secret:
   name: elastic-secret
   type: Opaque
-  elastic:
-    protocol: http
-    host: elasticsearch-master
-    port: 9200
-    username: elastic
-    password: elastic
+
+crawler:
+  page: 5
+  robotObey: "True"
+  log:
+    level: DEBUG
+  concurrentRequest: 2
+  delay: 0.5
+  encoding: "utf-8"
+
+elastic:
+  protocol: http
+  host: elasticsearch-master
+  port: 9200
+  username: elastic
+  password: elastic
 
 configMap:
   create: false

@@ -18,8 +18,22 @@ spec:
               image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.image.pullPolicy }}
               env:
+                - name: TZ
+                  value: Asia/Seoul
+                - name: NEWS_PAGE_NUMBER
+                  value: {{ .Values.crawler.page }}
+                - name: EDGE_ROBOTSTXT_OBEY
+                  value: {{ .Values.crawler.robotObey }}
+                - name: EDGE_LOG_LEVEL
+                  value: {{ .Values.crawler.log.level }}
+                - name: EDGE_CONCURRENT_REQUESTS_PER_DOMAIN
+                  value: {{ .Values.crawler.concurrentRequest }}
+                - name: EDGE_DOWNLOAD_DELAY
+                  value: {{ .Values.crawler.delay }}
+                - name: EDGE_FEED_EXPORT_ENCODING
+                  value: {{ .Values.crawler.encoding }}
                 - name: ELASTICSEARCH_PROTOCOL
-                  value: {{ .Values.secret.elastic.protocol }}
+                  value: {{ .Values.elastic.protocol }}
                 - name: ELASTICSEARCH_HOST
                   valueFrom:
                     secretKeyRef:

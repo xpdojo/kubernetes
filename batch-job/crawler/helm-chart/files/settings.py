@@ -1,6 +1,5 @@
 BOT_NAME = 'yna_crawler'
 SPIDER_MODULES = ['yna_crawler.spiders']
-NEWSPIDER_MODULE = 'yna_crawler.spiders'
 ROBOTSTXT_OBEY = True
 DOWNLOAD_DELAY = 0.5
 CONCURRENT_REQUESTS_PER_DOMAIN = 2
