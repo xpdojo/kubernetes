@@ -211,25 +211,44 @@ dmesg | tail
 
 ### Secret
 
+- declarative
+
 ```bash
-# kubectl create secret generic dev-db-secret \
-#   --from-literal=username='elastic' \
-#   --from-literal=password='elastic'
 
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ .Values.secret.name }}
-type: {{ .Values.secret.type }}
+  name: elastic-secret
+type: Opaque
 data: # echo -n 'key' | base64
-  username: {{ .Values.secret.elastic.username | b64enc }}
-  password: {{ .Values.secret.elastic.password | b64enc }}
-stringData: # strings will be encoded 'helm template batch-job/crawler/helm-chart'
-  host: {{ .Values.secret.elastic.host }}
-  port: {{ quote .Values.secret.elastic.port }}
+  username: ZWxhc3RpYw==
+  password: ZWxhc3RpYw==
+stringData: # strings will be encoded
+  host: elasticsearch-master
+  port: "9200"
 
 EOF
+```
+
+- imperative
+
+```bash
+# from file
+cat > credentials.txt << EOF
+username=elastic
+password=elastic
+EOF
+
+kubectl create secret generic elastic-secret \
+  --from-env-file ./credentials.txt
+```
+
+```bash
+# from literal
+kubectl create secret generic elastic-secret \
+  --from-literal=username='elastic' \
+  --from-literal=password='elastic'
 ```
 
 ### CronJob
@@ -239,9 +258,9 @@ cat <<EOF | kubectl apply -f -
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: yna-crawler
+  name: crawler
   labels:
-    app: yna-crawler
+    app: crawler
 spec:
   schedule: "0 * * * *" # hourly (https://crontab.guru/)
   jobTemplate:
@@ -250,31 +269,31 @@ spec:
         spec:
           restartPolicy: Never
           containers:
-            - name: yna-crawler
-              image: 192.168.7.191/yna-crawler:0.1.0
+            - name: crawler
+              image: 192.168.7.191/crawler:0.1.0
               imagePullPolicy: Always
               env:
                 - name: ELASTICSEARCH_PROTOCOL
-                  value: {{ .Values.secret.elastic.protocol }}
+                  value: "http"
                 - name: ELASTICSEARCH_HOST
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.secret.name }}
+                      name: elastic-secret
                       key: host
                 - name: ELASTICSEARCH_PORT
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.secret.name }}
+                      name: elastic-secret
                       key: port
                 - name: ELASTICSEARCH_USERNAME
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.secret.name }}
+                      name: elastic-secret
                       key: username
                 - name: ELASTICSEARCH_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: {{ .Values.secret.name }}
+                      name: elastic-secret
                       key: password
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
