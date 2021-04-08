@@ -1,3 +1,4 @@
-kubectl --namespace {{ .Release.Namespace }} get cj
 
-helm test {{ .Release.Name }}
+search: kubectl -n {{ .Release.Namespace }} get cj
+status: helm -n {{ .Release.Namespace }} test {{ .Release.Name }}
+remove: helm -n {{ .Release.Namespace }} uninstall {{ .Release.Name }}

@@ -54,16 +54,5 @@ spec:
                     secretKeyRef:
                       name: {{ .Values.secret.name }}
                       key: password
-              {{- if .Values.configMap.create }}
-              volumeMounts:
-                - name: crawler-conf
-                  mountPath: /yna_crawler/yna_crawler/
-              {{- end }}
-          {{- if .Values.configMap.create }}
-          volumes:
-            - name: crawler-conf
-              configMap:
-                name: {{ .Values.configMap.name }}
-          {{- end }}
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3

@@ -270,9 +270,23 @@ spec:
           restartPolicy: Never
           containers:
             - name: crawler
-              image: 192.168.7.191/crawler:0.1.0
+              image: 192.168.7.191:5000/crawler:0.1.0
               imagePullPolicy: Always
               env:
+                - name: TZ
+                  value: Asia/Seoul
+                - name: NEWS_PAGE_NUMBER
+                  value: "5"
+                - name: EDGE_ROBOTSTXT_OBEY
+                  value: "True"
+                - name: EDGE_LOG_LEVEL
+                  value: DEBUG
+                - name: EDGE_CONCURRENT_REQUESTS_PER_DOMAIN
+                  value: "2"
+                - name: EDGE_DOWNLOAD_DELAY
+                  value: "0.5"
+                - name: EDGE_FEED_EXPORT_ENCODING
+                  value: "utf-8"
                 - name: ELASTICSEARCH_PROTOCOL
                   value: "http"
                 - name: ELASTICSEARCH_HOST
