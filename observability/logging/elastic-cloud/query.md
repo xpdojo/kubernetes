@@ -215,7 +215,8 @@ kubectl get pod --selector='kibana.k8s.elastic.co/name=quickstart'
 
 ```bash
 kubectl get service quickstart-kb-http
-kubectl port-forward service/quickstart-kb-http 5601
+# kubectl port-forward service/quickstart-kb-http 5601
+kubectl port-forward service/quickstart-kb-http --address 0.0.0.0 5601:5601 &
 kubectl get secret quickstart-es-elastic-user -o=jsonpath='{.data.elastic}' | base64 --decode; echo
 ```
 

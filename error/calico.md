@@ -1,6 +1,6 @@
-# 에러 모음
+# Calico node
 
-- [에러 모음](#에러-모음)
+- [Calico node](#calico-node)
   - [calico/node is not ready: BIRD is not ready: BGP not established](#caliconode-is-not-ready-bird-is-not-ready-bgp-not-established)
     - [Solution](#solution)
 
