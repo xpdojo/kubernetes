@@ -11,8 +11,10 @@
       - [URL 파라미터를 사용한 쿼리](#url-파라미터를-사용한-쿼리)
       - [JSON (aka Elasticsearch Query DSL)을 사용한 쿼리](#json-aka-elasticsearch-query-dsl을-사용한-쿼리)
     - [Delete `index`](#delete-index)
+    - [User 생성](#user-생성)
   - [Kibana 배포](#kibana-배포)
     - [Kibana 상태 확인](#kibana-상태-확인)
+  - [Elastic (on Kubernetes)](#elastic-on-kubernetes)
 
 ## 참고
 
@@ -190,6 +192,18 @@ curl -XDELETE 'http://10.109.74.193:9200/$ES_INDEX'
 { "acknowledged": true }
 ```
 
+### User 생성
+
+```bash
+curl -XPOST http://10.109.74.193:9200//_security/user/{username} \
+--header 'Content-Type: application/json' -d '
+  {
+    "password": "qwe123",
+    "roles": ["superuser"]
+  }
+'
+```
+
 ## Kibana 배포
 
 - [Docs](https://www.elastic.co/guide/en/cloud-on-k8s/master/k8s-deploy-kibana.html)
@@ -224,4 +238,14 @@ kubectl get secret quickstart-es-elastic-user -o=jsonpath='{.data.elastic}' | ba
 
 ```bash
 curl -XGET "http://10.109.74.193:5601/status" -I
+```
+
+## Elastic (on Kubernetes)
+
+```bash
+# Get password
+kubectl get secret <elasticsearch-secret> -o=jsonpath='{.data.elastic}' | base64 --decode; echo
+
+# query
+curl -u "$ELASTIC_USERNAME:$ELASTIC_PASSWORD" -k "https://<elasticsearch-http-service>:9200"
 ```

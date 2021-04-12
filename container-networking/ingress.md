@@ -8,6 +8,7 @@
   - [Ingress](#ingress)
     - [`1.19` or later](#119-or-later)
     - [`1.18`](#118)
+    - [nginx `.conf`](#nginx-conf)
 
 ## Ingress Controller
 
@@ -148,8 +149,8 @@ spec:
 - 이 때 `rewrite` 규칙이 필요합니다.
 - 아래와 같은 `annotation`을 추가합니다.
 - `kubectl apply -f ingress.yaml` 명령어로 `Ingress` 재배포 후 확인해보면
-`http://192.168.7.191/kib/status`라는 경로로 요청할 경우
-`http://kibana:5601/status`로 요청이 전달됩니다.
+  `http://192.168.7.191/kib/status`라는 경로로 요청할 경우
+  `http://kibana:5601/status`로 요청이 전달됩니다.
 - [참고](https://kubernetes.github.io/ingress-nginx/examples/rewrite/)
 
 ```yaml
@@ -195,4 +196,41 @@ spec:
             backend:
               serviceName: kubernetes-dashboard
               servicePort: 80
+```
+
+### nginx `.conf`
+
+테스트 환경에서 ingress 포트(`80`, `443`) 대신 다른 포트를 사용하려면 호스트에 nginx를 설치해서 ingress로 전달하고 있는데...다른 방법 찾아보기
+
+```nginx
+http {
+  upstream kibana {
+    server kibana.local.com:80;
+  }
+  upstream nginx {
+    server nginx.local.com:80;
+  }
+
+  map $host $backend {
+    kibana.local.com kibana;
+    nginx.local.com nginx;
+  }
+
+  server {
+    listen 8089;
+    client_max_body_size 500m;
+    server_tokens off;
+
+    location / {
+      proxy_read_timeout 300s;
+      proxy_connect_timeout 75s;
+      proxy_pass http://$backend;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection 'upgrade';
+      proxy_set_header Host $host;
+      proxy_cache_bypass $http_upgrade;
+    }
+  }
+}
 ```
