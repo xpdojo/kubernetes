@@ -18,7 +18,7 @@
 
 ## Quickstart
 
-- 쿠버네티스 v1.20부터 추가 플래그가 필요합니다.
+- 쿠버네티스 v1.20부터 API 서버에 추가 플래그가 필요합니다.
 - `/etc/kubernetes/manifests/kube-apiserver.yaml` 파일을 수정합니다.
 
 ```diff
@@ -136,7 +136,7 @@ status: {}
 apt-get install -y nfs-common
 ```
 
-- `nfs-client-provisioner` 차트를 설치합니다.
+- Helm을 이용해 `nfs-client-provisioner` 차트를 설치합니다.
 
 ```bash
 helm repo add stable https://charts.helm.sh/stable

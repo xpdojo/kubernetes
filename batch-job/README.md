@@ -1,5 +1,9 @@
 # `CronJob`, `Job`
 
+![batch-job.png](../images/batch/batch-job.png)
+
+_출처: [Kubernetes Patterns](https://developers.redhat.com/blog/2020/05/11/top-10-must-know-kubernetes-design-patterns/) - Red Hat_
+
 ## Kubernetes [Workloads](https://kubernetes.io/ko/docs/concepts/workloads/)
 
 - [Workloads](https://kubernetes.io/ko/docs/concepts/workloads/) - Kubernetes Docs
