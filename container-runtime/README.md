@@ -254,11 +254,11 @@ cgroups v2가 Linux 커널 4.5부터 공식적으로 포함되었습니다. 자�
 컨테이너에 필수적인 기능은 아니지만 이미지 레이어 구현에 사용되면서 필수적인
 기능으로 자리잡았습니다. 예를 들면 도커가 사용하는 [AUFS](https://docs.docker.com/storage/storagedriver/aufs-driver/), [OverlayFS](https://docs.docker.com/storage/storagedriver/overlayfs-driver/) 등이 있습니다.
 
-![aufs](../images/container-runtime/aufs-layers.jpg)
+![aufs](../images/storage/aufs-layers.jpg)
 
 출처: [Use the AUFS storage driver - docker docs](https://docs.docker.com/storage/storagedriver/aufs-driver/)
 
-![overlay-constructs](../images/container-runtime/overlay-constructs.jpg)
+![overlay-constructs](../images/storage/overlay-constructs.jpg)
 
 _출처: [Use the OverlayFS storage driver - docker docs](https://docs.docker.com/storage/storagedriver/overlayfs-driver/#how-the-overlay-driver-works)_
 

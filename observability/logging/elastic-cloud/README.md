@@ -8,15 +8,15 @@
 
 ### Volumes
 
-![types-of-mounts-bind](../../../images/elastic/types-of-mounts-volume.png)
+![types-of-mounts-bind](../../../images/storage/types-of-mounts-volume.png)
 
 ### Bind mounts
 
-![types-of-mounts-bind](../../../images/elastic/types-of-mounts-bind.png)
+![types-of-mounts-bind](../../../images/storage/types-of-mounts-bind.png)
 
 ### tmpfs mounts
 
-![types-of-mounts-bind](../../../images/elastic/types-of-mounts-tmpfs.png)
+![types-of-mounts-bind](../../../images/storage/types-of-mounts-tmpfs.png)
 
 ## Elasticsearch
 
