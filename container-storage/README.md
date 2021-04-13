@@ -49,13 +49,20 @@
   디지털 데이터 저장 장치 그 자체를 스토리지 또는 스토리지 디바이스라고 합니다.
 - Partition:
   하나의 물리 스토리지를 논리적으로 분할해 생성되는 공간입니다.
-- [Volume](<https://en.wikipedia.org/wiki/Volume_(computing)>):
-  컴퓨터가 사용하고 인식할 수 있는 특정 파일 시스템의 스토리지 컨테이너입니다.
-  볼륨 또는 논리 드라이브(logical drive)는 하나의 파일 시스템을 갖춘 저장 영역입니다.
-  일반적으로 하드 디스크의 단일 파티션에 상주합니다.
-  주요 스토리지 볼륨 유형으로는 HD(Hard Drive), SSD(Solid State Drive), DVD, CD 등이 있습니다.
-- [Logical Volume](https://www.ibm.com/docs/en/aix/7.1?topic=concepts-logical-volumes):
-  하나의 연속된 디스크 볼륨으로 보이지만, 실제로는 비연속적인 물리 파티션 또는 두 개 이상의 물리적 볼륨에 상주하는 볼륨을 말합니다.
+  예를 들어, Windows 환경의 C:드라이브, D:드라이브, E:드라이브, ...
+- [`LVM`, Logical Volume Manager](<https://en.wikipedia.org/wiki/Logical_Volume_Manager_(Linux)>): 리눅스에서 스토리지를 효율적으로 사용하기 위해 LVM을 사용합니다.
+  - [참고](https://tech.cloud.nongshim.co.kr/2018/11/23/lvmlogical-volume-manager-1-%EA%B0%9C%EB%85%90/)
+  - `PV`, Physical Volume:
+    하나의 파일 시스템을 갖춘 저장 영역입니다.
+    일반적으로 하드 디스크의 단일 파티션을 특정 파일 시스템으로 포맷하여 볼륨으로 사용합니다.
+    즉, 블록 디바이스(ex: `/dev/sda1`, `/dev/sda2` 등의 하드 디스크) 전체
+    또는 그 블록 디바이스를 이루고 있는 파티션들을 LVM에서 사용할 수 있게 PV로 초기화합니다.
+  - `VG`, Volume Group:
+    PV들의 집합으로 LV를 할당할 수 있는 공간입니다.
+  - `LV`, Logical Volume:
+    하나의 연속된 디스크 볼륨으로 보이지만, 실제로는 비연속적인 물리 파티션 또는 두 개 이상의 물리적 볼륨에 상주하는 볼륨을 말합니다.
+
+![logical-volume-manager.png](../images/storage/logical-volume-manager.png)
 
 ## 스토리지 유형
 
@@ -69,6 +76,10 @@
 ![file-object-storage.svg](../images/storage/file-object-storage.svg)
 
 _출처: [What’s the Difference Between Block, File and Object-based Data Storage?](https://www.caringo.com/blog/back-basics-object-storage) - Caringo_
+
+![parking-file-object-storage.png](../images/storage/parking-file-object-storage.png)
+
+_출처: [Harry The Great](https://medium.com/harrythegreat/9d9c2da57649), Dell EMC_
 
 ### 파일 스토리지
 
