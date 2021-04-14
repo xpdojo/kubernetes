@@ -12,9 +12,9 @@
     - [Union Mount](#union-mount)
   - [Kubernetes Storage API](#kubernetes-storage-api)
     - [Volume](#volume)
-    - [PersistentVolume (PV)](#persistentvolume-pv)
-    - [PersistentVolumeClaim (PVC)](#persistentvolumeclaim-pvc)
-    - [StorageClass (SC)](#storageclass-sc)
+    - [PersistentVolume (`PV`)](#persistentvolume-pv)
+    - [PersistentVolumeClaim (`PVC`)](#persistentvolumeclaim-pvc)
+    - [StorageClass (`SC`)](#storageclass-sc)
     - [Kubernetes Storage Lifecycle](#kubernetes-storage-lifecycle)
     - [ReplicaSet과의 관계](#replicaset과의-관계)
   - [Container Storage Interface (CSI)](#container-storage-interface-csi)
@@ -34,7 +34,10 @@
   - [Getting Started with Kubernetes | Storage Architecture and Plug-ins](https://www.alibabacloud.com/blog/getting-started-with-kubernetes-%7C-storage-architecture-and-plug-ins_596307) - Kan Junbao
   - [What Is Kubernetes Storage? How Persistent Storage Works](https://www.enterprisestorageforum.com/cloud/kubernetes-storage/) - Sean Michael Kerner
   - [Introduction to Kubernetes Storage and NVMe-oF Support](https://01.org/kubernetes/blogs/qwang10/2019/introduction-kubernetes-storage-and-nvme-support) - Shane Wang
-- [CSI](https://github.com/kodekloudhub/certified-kubernetes-administrator-course/blob/master/docs/08-Storage/05-Container.Storage-Interface.md) - KodeKloud
+- [CSI Volume Plugins in Kubernetes Design Doc](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/storage/container-storage-interface.md)
+  - [CSI](https://github.com/kodekloudhub/certified-kubernetes-administrator-course/blob/master/docs/08-Storage/05-Container.Storage-Interface.md) - KodeKloud
+  - [Kubernetes Persistent Storage Process](https://www.alibabacloud.com/blog/kubernetes-persistent-storage-process_596505) - Alibaba Cloud
+  - [CSI provisioner (external provisioner)](https://github.com/kubernetes-csi/external-provisioner)
   - [Container Storage Interface (CSI) for Kubernetes GA](https://kubernetes.io/blog/2019/01/15/container-storage-interface-ga/)
   - [CSI Driver List](https://kubernetes-csi.github.io/docs/drivers.html)
   - [CSI NFS Driver](https://github.com/kubernetes-csi/csi-driver-nfs)
@@ -56,7 +59,7 @@
   - [참고](https://tech.cloud.nongshim.co.kr/2018/11/23/lvmlogical-volume-manager-1-%EA%B0%9C%EB%85%90/)
   - `PV`, Physical Volume:
     하나의 파일 시스템을 갖춘 저장 영역입니다.
-    일반적으로 하드 디스크의 단일 파티션을 특정 파일 시스템으로 포맷하여 볼륨으로 사용합니다.
+    예를 들어, 하드 디스크의 단일 파티션을 특정 파일 시스템으로 포맷하여 볼륨으로 사용할 수 있습니다.
     즉, 블록 디바이스(ex: `/dev/sda1`, `/dev/sda2` 등의 하드 디스크) 전체
     또는 그 블록 디바이스를 이루고 있는 파티션들을 LVM에서 사용할 수 있게 PV로 초기화합니다.
   - `VG`, Volume Group:
@@ -259,7 +262,7 @@ _출처: [Kubernetes Patterns](https://developers.redhat.com/blog/2020/05/11/top
 
 _출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
 
-### Volume
+### [Volume](https://kubernetes.io/ko/docs/concepts/storage/volumes/)
 
 ```bash
 kubectl explain pod.spec.volumes
@@ -273,17 +276,17 @@ kubectl explain pod.spec.volumes
   - `hostPath`: 호스트 노드의 파일 시스템에 있는 파일이나 디렉터리를 파드에 마운트 합니다.
   - `local`: 디스크, 파티션 또는 디렉터리 같은 마운트된 로컬 스토리지 장치를 나타냅니다.
     정적으로 생성된 PV로만 사용할 수 있습니다.
-    `hostPath` 볼륨에 비해 수동으로 파드를 노드에 예약하지 않고도 내구성과 휴대성을 갖춘 방식으로 사용된다.
-- 영구적: 스토리지 기술 지식을 알아야 함
+    `hostPath` 볼륨에 비해 수동으로 파드를 노드에 예약하지 않고도 내구성과 휴대성을 갖춘 방식으로 사용됩니다.
+- 영구적: 스토리지 기술 지식을 알아야 합니다.
   - 파드 개발자가 클러스터에서 사용할 수 있는 실제 네트워크 스토리지 인프라에 대한 지식을 갖추고 있어야 합니다.
   - `nfs`: 기존 NFS (네트워크 파일 시스템) 볼륨을 파드에 마운트 할수 있습니다.
     파드를 제거할 때 지워지는 `emptyDir` 와는 다르게 `nfs` 볼륨의 내용은 유지되고, 볼륨은 그저 마운트 해제만 됩니다.
     `nfs`를 사용하면 export한 NFS 서버를 알아야 하지만 `nfs-provisioner`를 사용하면 사용자가 export 정보를 알지 못해도 동적으로 프로비저닝할 수 있습니다.
-- 영구적: 기본 스토리지 기술에서 파드 분리
+- 영구적: 기존 스토리지 기술에서 파드를 분리합니다.
   - 쿠버네티스에 애플리케이션을 배포하는 개발자는 파드를 실행하는 데
     사용되는 물리적 서버 유형을 알 수 없는 것과 마찬가지로
-    사용되는 스토리지 기술의 종류를 몰라도 상관없다.
-    인프라 관련 처리는 클러스터 관리자의 유일한 도메인이어야 한다.
+    사용되는 스토리지 기술의 종류를 몰라도 상관없습니다.
+    인프라 관련 처리는 클러스터 관리자의 유일한 도메인이어야 합니다.
   - `persistentVolumeClaim`: 사전 또는 동적으로 프로비저닝된 영구 스토리지를 사용하는 방법입니다.
   - `configMap`, `secret`, `downwardAPI`: 특정 쿠버네티스 리소스 및 클러스터 정보를 파드에 노출하는 데 사용되는 특수한 유형의 볼륨입니다.
   - `cinder`, `cephfs`, `iscsi`, `glusterfs`, `vsphere-Volume`, `...`: 다른 유형의 네트워크 스토리지를 마운트하는 데 사용됩니다.
@@ -294,7 +297,7 @@ kubectl explain pod.spec.volumes
 
 _출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
 
-### PersistentVolume (PV)
+### [PersistentVolume](https://kubernetes.io/ko/docs/concepts/storage/persistent-volumes/) (`PV`)
 
 - 관리자가 프로비저닝하거나 스토리지 클래스를 사용하여 동적으로 프로비저닝한 클러스터의 스토리지입니다.
 - 파드에 마운트된 모든 볼륨을 백업하는 디스크로 볼 수 있습니다.
@@ -306,7 +309,7 @@ _출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-i
 
 _출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
 
-### PersistentVolumeClaim (PVC)
+### [PersistentVolumeClaim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims) (`PVC`)
 
 - 사용자의 스토리지에 대한 요청입니다.
 - 파드가 노드 리소스를 사용한다면 PVC는 PV 리소스를 사용합니다.
@@ -314,7 +317,7 @@ _출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-i
 - PVC는 특정 크기 및 접근 모드를 요청할 수 있습니다.
   - 예를 들어, `AccessModes` 필드에 `ReadWriteOnce`, `ReadOnlyMany` 또는 `ReadWriteMany`라고 지정해서 마운트 할 수 있습니다.
 
-### StorageClass (SC)
+### [StorageClass](https://kubernetes.io/ko/docs/concepts/storage/storage-classes/) (`SC`)
 
 - StorageClass는 관리자가 제공하는 스토리지의 `classes`\*를 설명할 수 있는 방법을 제공합니다.
   - \*class: a set or category of things having some property or attribute in common and differentiated from others by kind, type, or quality.
@@ -322,7 +325,12 @@ _출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-i
   - 다른 클래스는 서비스의 품질 수준 또는 백업 정책, 클러스터 관리자가 정한 임의의 정책에 매핑될 수 있습니다.
   - 애플리케이션을 배포하는 개발자가 파드를 실행하는 데 사용되는 물리적 서버 특성을 알 필요가 없는 것처럼 클러스터가 제공하는 스토리지 기술을 알 필요가 없습니다.
   - 인프라에 대한 세부 정보는 클러스터 관리자(admin/operator)가 처리해야 합니다.
-- 동적 볼륨 프로비저닝의 구현은 `storage.k8s.io` API 그룹의 StorageClass API 오브젝트를 기반으로 합니다.
+- [동적 볼륨 프로비저닝](https://kubernetes.io/ko/docs/concepts/storage/dynamic-provisioning/)의 구현은 `storage.k8s.io` API 그룹의 `StorageClass` API 오브젝트를 기반으로 합니다.
+  - [쿠버네티스](https://kubernetes.io/docs/concepts/storage/storage-classes/#provisioner)에서 직접 제공하는 `internal provisioner`와
+    [볼륨 프로비저닝 디자인](https://github.com/kubernetes/community/blob/066f8d011c/contributors/design-proposals/storage/volume-provisioning.md)을 따라 작성된 독립적인 프로그램인 `external provisioner`가 있습니다.
+  - internal 프로비저너는 `kubernetes.io`가 접두사로 붙고 쿠버네티스와 함께 제공됩니다.
+  - external 프로비저너의 작성자는 코드의 수명, 프로비저너의 배송 방법, 실행 방법, (Flex를 포함한)볼륨 플러그인 등에 대한 완전한 재량권을 가집니다.
+    - [external provisioner를 작성하기 위한 라이브러리](https://github.com/kubernetes-sigs/sig-storage-lib-external-provisioner) - GitHub
 
 ![storage-class-provisioner.png](../images/storage/storage-class-provisioner.png)
 
