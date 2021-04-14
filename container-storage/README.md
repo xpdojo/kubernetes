@@ -15,8 +15,9 @@
     - [PersistentVolume (PV)](#persistentvolume-pv)
     - [PersistentVolumeClaim (PVC)](#persistentvolumeclaim-pvc)
     - [StorageClass (SC)](#storageclass-sc)
-    - [Container Storage Interface (CSI)](#container-storage-interface-csi)
+    - [Kubernetes Storage Lifecycle](#kubernetes-storage-lifecycle)
     - [ReplicaSet과의 관계](#replicaset과의-관계)
+  - [Container Storage Interface (CSI)](#container-storage-interface-csi)
 
 ## 참고 자료
 
@@ -25,7 +26,8 @@
   - [Volume vs. Partition](https://www.alphr.com/volume-vs-partition/)
   - [An Introduction to LVM Concepts, Terminology, and Operations](https://www.digitalocean.com/community/tutorials/an-introduction-to-lvm-concepts-terminology-and-operations)
   - [스토리지 기술](http://www.ktword.co.kr/abbr_view.php?m_temp1=3113) - 정보통신기술용어해설, 차재복
-- [쿠버네티스 인 액션 1/E](http://www.acornpub.co.kr/book/k8s-in-action-new) - 마르코 룩샤
+- [Kubernetes In Action 2/E](https://www.manning.com/books/kubernetes-in-action-second-edition) - Marko Lukša, Publication in Summer 2021
+  - [쿠버네티스 인 액션 1/E](http://www.acornpub.co.kr/book/k8s-in-action-new) - 마르코 룩샤
   - [Understanding persistent storage](https://docs.openshift.com/container-platform/latest/storage/understanding-persistent-storage.html) - Red Hat OpenShift
   - [Storage Patterns for Kubernetes For Dummies](https://www.redhat.com/cms/managed-files/st-storage-patterns-kubernetes-dummies-ebook-f20626-201911-en.pdf) - Red Hat
   - [Kubernetes Storage: Dynamic Volumes and the Container Storage Interface](https://platform9.com/blog/kubernetes-storage-dynamic-volumes-and-the-container-storage-interface/) - Platform9
@@ -61,6 +63,9 @@
     PV들의 집합으로 LV를 할당할 수 있는 공간입니다.
   - `LV`, Logical Volume:
     하나의 연속된 디스크 볼륨으로 보이지만, 실제로는 비연속적인 물리 파티션 또는 두 개 이상의 물리적 볼륨에 상주하는 볼륨을 말합니다.
+- [프로비저닝(Provisioning)](https://www.redhat.com/ko/topics/automation/what-is-provisioning):
+  프로비저닝은 IT 인프라를 설정하는 프로세스입니다.
+  또한 사용자와 시스템에서 사용할 수 있도록, 데이터와 리소스에 대한 액세스를 관리하는 데 필요한 단계를 지칭하기도 합니다.
 
 ![logical-volume-manager.png](../images/storage/logical-volume-manager.png)
 
@@ -142,7 +147,7 @@ _[Use volumes](https://docs.docker.com/storage/volumes/)_
 
 ### Storage Driver
 
-스토리지 드라이버를 사용하면 컨테이너의 writable layer에 데이터를 생성 할 수 있습니다.
+스토리지 드라이버를 사용하면 컨테이너의 writable 레이어에 데이터를 생성 할 수 있습니다.
 컨테이너가 삭제 된 후에는 파일이 유지되지 않으며, 읽기-쓰기 속도가 기본 파일 시스템 성능보다 낮습니다.
 
 - Docker 이미지는 일련의 레이어로 구성됩니다.
@@ -169,17 +174,18 @@ docker ps --size
 # 68cb541dcfb5   registry:2.7.1         "/entrypoint.sh /etc…"   10 days ago    Up 21 hours   0.0.0.0:5000->5000/tcp   registry                                                                                                         2.88GB (virtual 2.9GB)
 ```
 
-- `size`: 각 컨테이너의 Writable layer에 사용되는 데이터(on disk) 크기입니다.
-- `virtual size`: 컨테이너에서 사용하는 R/O 이미지 데이터와 컨테이너의 Writable layer에 사용되는 데이터 크기.
+- `size`: 각 컨테이너의 writable 레이어에 사용되는 데이터(on disk) 크기입니다.
+- `virtual size`: 컨테이너에서 사용하는 R/O 이미지 데이터와 컨테이너의 writable 레이어에 사용되는 데이터 크기.
 - 총 디스크 사용량을 과대 평가하지 않기 위해 공통 레이어를 가진 컨테이너의 사이즈는 합산되지 않습니다.
 - 공통 레이어는 R/O 데이터를 공유합니다.
-- 동일한 이미지로 여러 컨테이너가 실행될 경우, 컨테이너에 대한 총 디스크 크기는 SUM(컨테이너들의 `size`) + 하나의 이미지 크기(`virtual size` - `size`)가 됩니다.
+  - 동일한 이미지로 여러 컨테이너가 실행될 경우, 컨테이너에 대한 총 디스크 크기는 SUM(컨테이너들의 `size`) + 하나의 이미지 크기(`virtual size` - `size`)가 됩니다.
 - 디스크 사이즈 계산에 제외되는 부분
   - log files if you use the `json-file` logging driver.
   - `Volumes` and `bind mounts` used by the container.
   - the container’s `configuration files`.
   - Memory written to disk (if `swapping` is enabled).
   - `Checkpoints`, if you’re using the experimental checkpoint/restore feature.
+- 아래 그림에서 `Container layer`가 `writable layer`입니다.
 
 ![aufs-layers.jpg](../images/storage/aufs-layers.jpg)
 
@@ -243,13 +249,15 @@ _출처: [Kubernetes Patterns](https://developers.redhat.com/blog/2020/05/11/top
 
 ![static-volume-provisioning.png](../images/storage/static-volume-provisioning.png)
 
-> _static provisioning_
+> _static provisioning_:
+> 쿠버네티스 관리자가 PV를 수동으로 미리 프로비저닝 해놓아야 사용자가 요청(claim)할 수 있습니다.
 
 ![dynamic-volume-provisioning.png](../images/storage/dynamic-volume-provisioning.png)
 
-> _dynamic provisioning_
+> _dynamic provisioning_:
+> 쿠버네티스 관리자가 PV 프로비저너(provisioner)와 스토리지 클래스를 배포해놓으면 사용자가 요청할 때 동적으로 PV를 프로비저닝합니다.
 
-_출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-in-action)_ - 2021 여름에 2판 예정
+_출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
 
 ### Volume
 
@@ -257,7 +265,8 @@ _출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-i
 kubectl explain pod.spec.volumes
 ```
 
-- 비영구적: 워커노드 의존
+- 비영구적: Worker Node 의존
+  - 해당 파드가 생성되는 노드에 의존하기 때문에 노드에 대한 정보가 필요합니다.
   - `emptyDir`: 파드가 노드에 할당될 때 처음 생성되며, 해당 노드에서 파드가 실행되는 동안에만 존재합니다.
     일시적인 데이터를 저장하는 데 사용되는 비어있는 단순한 디렉터리입니다.
     동일한 파드 내부에서 싫행 중인 컨테이너 간에 파일을 공유할 때 특히 유용합니다.
@@ -267,10 +276,9 @@ kubectl explain pod.spec.volumes
     `hostPath` 볼륨에 비해 수동으로 파드를 노드에 예약하지 않고도 내구성과 휴대성을 갖춘 방식으로 사용된다.
 - 영구적: 스토리지 기술 지식을 알아야 함
   - 파드 개발자가 클러스터에서 사용할 수 있는 실제 네트워크 스토리지 인프라에 대한 지식을 갖추고 있어야 합니다.
-    예를 들어, `nfs`를 사용한다면 `export`한 NFS 서버를 알아야 합니다.
-    다만 `nfs-provisioner`를 사용하면 위치를 알지 못해도 됩니다.
   - `nfs`: 기존 NFS (네트워크 파일 시스템) 볼륨을 파드에 마운트 할수 있습니다.
     파드를 제거할 때 지워지는 `emptyDir` 와는 다르게 `nfs` 볼륨의 내용은 유지되고, 볼륨은 그저 마운트 해제만 됩니다.
+    `nfs`를 사용하면 export한 NFS 서버를 알아야 하지만 `nfs-provisioner`를 사용하면 사용자가 export 정보를 알지 못해도 동적으로 프로비저닝할 수 있습니다.
 - 영구적: 기본 스토리지 기술에서 파드 분리
   - 쿠버네티스에 애플리케이션을 배포하는 개발자는 파드를 실행하는 데
     사용되는 물리적 서버 유형을 알 수 없는 것과 마찬가지로
@@ -282,7 +290,9 @@ kubectl explain pod.spec.volumes
 
 ![kubernetes-volume-hostpath.jpeg](../images/storage/kubernetes-volume-hostpath.jpeg)
 
-_출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-in-action)_ - 2021 여름에 2판 예정
+![nfs-volume-not-pv.png](../images/storage/nfs-volume-not-pv.png)
+
+_출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
 
 ### PersistentVolume (PV)
 
@@ -291,6 +301,10 @@ _출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-i
 - 노드가 클러스터 리소스인 것처럼 PV도 클러스터 리소스입니다.
 - PV는 Volumes와 같은 볼륨 플러그인이지만, PV를 사용하는 개별 파드와는 별개의 라이프사이클을 가집니다.
 - 이 API 오브젝트는 NFS, iSCSI 또는 클라우드 공급자별 스토리지 시스템 등 스토리지 구현에 대한 세부 정보를 담아냅니다.
+
+![persistent-volume.png](../images/storage/persistent-volume.png)
+
+_출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
 
 ### PersistentVolumeClaim (PVC)
 
@@ -302,14 +316,29 @@ _출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-i
 
 ### StorageClass (SC)
 
-- 스토리지클래스는 관리자가 제공하는 스토리지의 `classes`를 설명할 수 있는 방법을 제공합니다.
-- 다른 클래스는 서비스의 품질 수준 또는 백업 정책, 클러스터 관리자가 정한 임의의 정책에 매핑될 수 있습니다.
-- 쿠버네티스 자체는 클래스가 무엇을 나타내는지에 대해 상관하지 않습니다. 다른 스토리지 시스템에서는 이 개념을 `profiles`이라고도 합니다.
-- 동적 볼륨 프로비저닝의 구현은 storage.k8s.io API 그룹의 StorageClass API 오브젝트를 기반으로 합니다.
+- StorageClass는 관리자가 제공하는 스토리지의 `classes`\*를 설명할 수 있는 방법을 제공합니다.
+  - \*class: a set or category of things having some property or attribute in common and differentiated from others by kind, type, or quality.
+- 쿠버네티스 자체는 클래스가 무엇을 나타내는지에 대해 상관하지 않습니다. 다른 스토리지 시스템에서는 이 개념을 `profile`이라고도 합니다.
+  - 다른 클래스는 서비스의 품질 수준 또는 백업 정책, 클러스터 관리자가 정한 임의의 정책에 매핑될 수 있습니다.
+  - 애플리케이션을 배포하는 개발자가 파드를 실행하는 데 사용되는 물리적 서버 특성을 알 필요가 없는 것처럼 클러스터가 제공하는 스토리지 기술을 알 필요가 없습니다.
+  - 인프라에 대한 세부 정보는 클러스터 관리자(admin/operator)가 처리해야 합니다.
+- 동적 볼륨 프로비저닝의 구현은 `storage.k8s.io` API 그룹의 StorageClass API 오브젝트를 기반으로 합니다.
 
-### Container Storage Interface (CSI)
+![storage-class-provisioner.png](../images/storage/storage-class-provisioner.png)
 
-- 스토리지 벤더가 플러그인을 한 번만 개발해도 수많은 컨테이너 오케스트레이션 시스템에서 동작할 수 있는 산업 표준 컨테이너 스토리지 인터페이스를 정의합니다.
+_출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
+
+### Kubernetes Storage Lifecycle
+
+- **정적(statically)** 프로비저닝된 PV의 라이프사이클
+
+![static-volume-provisioning-lifecycle.png](../images/storage/static-volume-provisioning-lifecycle.png)
+
+- **동적(dynamically)** 프로비저닝된 PV의 라이프사이클
+
+![dynamic-volume-provisioning-lifecycle.png](../images/storage/dynamic-volume-provisioning-lifecycle.png)
+
+_출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-in-action-second-edition)_
 
 ### ReplicaSet과의 관계
 
@@ -317,4 +346,9 @@ _출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-i
 
 ![cluster-scope-pv.png](../images/storage/cluster-scope-pv.png)
 
-_출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-in-action)_ - 2021 여름에 2판 예정
+_출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-in-action)_
+
+## Container Storage Interface (CSI)
+
+- [Spec v1.4.0](https://github.com/container-storage-interface/spec/blob/v1.4.0/spec.md) - GitHub
+- 스토리지 벤더가 플러그인을 한 번만 개발해도 수많은 컨테이너 오케스트레이션 시스템에서 동작할 수 있는 산업 표준 컨테이너 스토리지 인터페이스를 정의합니다.
