@@ -291,7 +291,7 @@ kubectl explain pod.spec.volumes
   - `configMap`, `secret`, `downwardAPI`: 특정 쿠버네티스 리소스 및 클러스터 정보를 파드에 노출하는 데 사용되는 특수한 유형의 볼륨입니다.
   - `cinder`, `cephfs`, `iscsi`, `glusterfs`, `vsphere-Volume`, `...`: 다른 유형의 네트워크 스토리지를 마운트하는 데 사용됩니다.
 
-![kubernetes-volume-hostpath.jpeg](../images/storage/kubernetes-volume-hostpath.jpeg)
+![kubernetes-volume-hostpath.jpeg](../images/storage/kubernetes-volume-hostpath.png)
 
 ![nfs-volume-not-pv.png](../images/storage/nfs-volume-not-pv.png)
 
