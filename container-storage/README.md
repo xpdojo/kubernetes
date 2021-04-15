@@ -391,6 +391,9 @@ _출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-i
 
 ## Container Storage Interface (CSI)
 
-- [Spec v1.4.0](https://github.com/container-storage-interface/spec/blob/v1.4.0/spec.md) - GitHub
 - 스토리지 벤더가 플러그인을 한 번만 개발해도 수많은 컨테이너 오케스트레이션 시스템에서 동작할 수 있는 산업 표준 컨테이너 스토리지 인터페이스를 정의합니다.
-- TODO: write my own external provisioner
+- [Spec v1.4.0](https://github.com/container-storage-interface/spec/blob/v1.4.0/spec.md) - GitHub
+  - TODO: [번역하기](csi-spec/csi-spec-v1.4.0.md)
+- TODO: write my own [CSI driver](https://kubernetes-csi.github.io/docs/developing.html)
+  - [kubernetes-csi/csi-driver-host-path](https://github.com/kubernetes-csi/csi-driver-host-path)
+  - [kubernetes-csi/csi-driver-nfs](https://github.com/kubernetes-csi/csi-driver-nfs)

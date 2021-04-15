@@ -14,6 +14,8 @@
 
 ### Ubuntu 20.04
 
+- [Docker setup](https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker)
+
 ```bash
 sudo -i
 apt-get install -y docker.io
@@ -21,25 +23,31 @@ apt-get install -y docker.io
 
 ```bash
 mkdir -p /mnt/docker-data
-
 cat > /etc/docker/daemon.json <<EOF
 {
   "data-root": "/mnt/docker-data",
   "storage-driver": "overlay2",
   "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
   "insecure-registries": [
     "worker01:5000",
     "192.168.7.191:5000",
   ]
 }
 EOF
+
+systemctl enable docker
+systemctl daemon-reload
+systemctl restart docker
 ```
 
 - cgroup driver의 기본값이 `cgoupfs`이기 때문에 변경해준다.
 - `systemd`를 사용해야 하는 이유는 없다. 다만 같이 쓰지 않도록 주의한다. [참고](https://tech.kakao.com/2020/06/29/cgroup-driver/)
 
 ```bash
-systemctl restart docker
 docker info
 ```
 
