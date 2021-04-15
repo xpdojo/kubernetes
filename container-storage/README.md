@@ -2,14 +2,20 @@
 
 - [컨테이너 스토리지 톺아보기](#컨테이너-스토리지-톺아보기)
   - [참고 자료](#참고-자료)
-  - [스토리지 관련 용어](#스토리지-관련-용어)
-  - [스토리지 유형](#스토리지-유형)
-    - [파일 스토리지](#파일-스토리지)
-    - [블록 스토리지](#블록-스토리지)
-    - [오브젝트 스토리지](#오브젝트-스토리지)
+  - [기본 개념](#기본-개념)
+    - [파일 시스템 (File System)](#파일-시스템-file-system)
+    - [프로비저닝 (Provisioning)](#프로비저닝-provisioning)
+    - [스토리지 (Storage)](#스토리지-storage)
+    - [파티션 (Partition)](#파티션-partition)
+    - [LVM (Logical Volume Manager)>)](#lvm-logical-volume-manager)
+    - [스토리지 유형](#스토리지-유형)
+      - [파일 스토리지](#파일-스토리지)
+      - [블록 스토리지](#블록-스토리지)
+      - [오브젝트 스토리지](#오브젝트-스토리지)
   - [Docker (Container) Storage](#docker-container-storage)
-    - [Storage Driver](#storage-driver)
     - [Union Mount](#union-mount)
+    - [Storage Driver](#storage-driver)
+    - [Volume Driver](#volume-driver)
   - [Kubernetes Storage API](#kubernetes-storage-api)
     - [Volume](#volume)
     - [PersistentVolume (`PV`)](#persistentvolume-pv)
@@ -42,37 +48,49 @@
   - [CSI Driver List](https://kubernetes-csi.github.io/docs/drivers.html)
   - [CSI NFS Driver](https://github.com/kubernetes-csi/csi-driver-nfs)
 
-## 스토리지 관련 용어
+## 기본 개념
 
-- [File System](http://doc.kldp.org/Translations/html/SysAdminGuide-KLDP/x1087.html):
-  운영체제가 저장 장치에 파일을 어떻게 쓰고 읽을 것인지를 지정한 체계를 말합니다.
-  즉, 파일들이 디스크상에서 구성되는 방식입니다.
-  파일 시스템이라는 말은 파일을 저장하는 데 사용되는 파티션이나 디스크를 가리킬 때나,
-  파일 시스템의 형식을 가리킬 때 사용되기도 합니다.
-  대표적으로 `FAT32`, `NTFS`, `ext4` 등이 있습니다.
-- [Storage](https://en.wikipedia.org/wiki/Computer_data_storage):
-  디지털 데이터 저장 장치 그 자체를 스토리지 또는 스토리지 디바이스라고 합니다.
-- Partition:
-  하나의 물리 스토리지를 논리적으로 분할해 생성되는 공간입니다.
-  예를 들어, Windows 환경의 C:드라이브, D:드라이브, E:드라이브, ...
-- [`LVM`, Logical Volume Manager](<https://en.wikipedia.org/wiki/Logical_Volume_Manager_(Linux)>): 리눅스에서 스토리지를 효율적으로 사용하기 위해 LVM을 사용합니다.
-  - [참고](https://tech.cloud.nongshim.co.kr/2018/11/23/lvmlogical-volume-manager-1-%EA%B0%9C%EB%85%90/)
-  - `PV`, Physical Volume:
-    하나의 파일 시스템을 갖춘 저장 영역입니다.
-    예를 들어, 하드 디스크의 단일 파티션을 특정 파일 시스템으로 포맷하여 볼륨으로 사용할 수 있습니다.
-    즉, 블록 디바이스(ex: `/dev/sda1`, `/dev/sda2` 등의 하드 디스크) 전체
-    또는 그 블록 디바이스를 이루고 있는 파티션들을 LVM에서 사용할 수 있게 PV로 초기화합니다.
-  - `VG`, Volume Group:
-    PV들의 집합으로 LV를 할당할 수 있는 공간입니다.
-  - `LV`, Logical Volume:
-    하나의 연속된 디스크 볼륨으로 보이지만, 실제로는 비연속적인 물리 파티션 또는 두 개 이상의 물리적 볼륨에 상주하는 볼륨을 말합니다.
-- [프로비저닝(Provisioning)](https://www.redhat.com/ko/topics/automation/what-is-provisioning):
-  프로비저닝은 IT 인프라를 설정하는 프로세스입니다.
-  또한 사용자와 시스템에서 사용할 수 있도록, 데이터와 리소스에 대한 액세스를 관리하는 데 필요한 단계를 지칭하기도 합니다.
+### [파일 시스템 (File System)](http://doc.kldp.org/Translations/html/SysAdminGuide-KLDP/x1087.html)
+
+운영체제가 저장 장치에 파일을 어떻게 쓰고 읽을 것인지를 지정한 체계를 말합니다.
+즉, 파일들이 디스크상에서 구성되는 방식입니다.
+파일 시스템이라는 말은 파일을 저장하는 데 사용되는 파티션이나 디스크를 가리킬 때나,
+파일 시스템의 형식을 가리킬 때 사용되기도 합니다.
+대표적으로 `FAT32`, `NTFS`, `ext4` 등이 있습니다.
+
+### [프로비저닝 (Provisioning)](https://www.redhat.com/ko/topics/automation/what-is-provisioning)
+
+프로비저닝은 IT 인프라를 설정하는 프로세스입니다.
+또한 사용자와 시스템에서 사용할 수 있도록, 데이터와 리소스에 대한 액세스를 관리하는 데 필요한 단계를 지칭하기도 합니다.
+
+### [스토리지 (Storage)](https://en.wikipedia.org/wiki/Computer_data_storage)
+
+디지털 데이터 저장 장치 그 자체를 스토리지 또는 스토리지 디바이스라고 합니다.
+
+### 파티션 (Partition)
+
+하나의 물리 스토리지를 논리적으로 분할해 생성되는 공간입니다.
+
+- 예를 들어, Windows 환경의 C:드라이브, D:드라이브, E:드라이브, ...
+
+### [LVM (Logical Volume Manager)](<https://en.wikipedia.org/wiki/Logical_Volume_Manager_(Linux)>)
+
+리눅스에서 스토리지를 효율적으로 사용하기 위해 LVM을 사용합니다.
+[참고](https://tech.cloud.nongshim.co.kr/2018/11/23/lvmlogical-volume-manager-1-%EA%B0%9C%EB%85%90/)
+
+- `PV`, Physical Volume:
+  하나의 파일 시스템을 갖춘 저장 영역입니다.
+  예를 들어, 하드 디스크의 단일 파티션을 특정 파일 시스템으로 포맷하여 볼륨으로 사용할 수 있습니다.
+  즉, 블록 디바이스(ex: `/dev/sda1`, `/dev/sda2` 등의 하드 디스크) 전체
+  또는 그 블록 디바이스를 이루고 있는 파티션들을 LVM에서 사용할 수 있게 PV로 초기화합니다.
+- `VG`, Volume Group:
+  PV들의 집합으로 LV를 할당할 수 있는 공간입니다.
+- `LV`, Logical Volume:
+  하나의 연속된 디스크 볼륨으로 보이지만, 실제로는 비연속적인 물리 파티션 또는 두 개 이상의 물리적 볼륨에 상주하는 볼륨을 말합니다.
 
 ![logical-volume-manager.png](../images/storage/logical-volume-manager.png)
 
-## 스토리지 유형
+### 스토리지 유형
 
 - [데이터 스토리지](https://www.redhat.com/ko/topics/data-storage) - Red Hat
   - [파일 스토리지, 블록 스토리지, 오브젝트 스토리지](https://www.redhat.com/ko/topics/data-storage/file-block-object-storage)
@@ -89,7 +107,7 @@ _출처: [What’s the Difference Between Block, File and Object-based Data Stor
 
 _출처: [Harry The Great](https://medium.com/harrythegreat/9d9c2da57649), Dell EMC_
 
-### 파일 스토리지
+#### 파일 스토리지
 
 File storage는 데이터가 폴더 안에 단일 정보로 저장됩니다.
 해당 데이터에 액세스해야 하는 경우, 컴퓨터는 그 데이터를 찾기 위해 경로를 알아야 합니다.
@@ -97,7 +115,7 @@ File storage는 데이터가 폴더 안에 단일 정보로 저장됩니다.
 
 대표적으로 네트워크 연결 스토리지(`NAS`, Network attached Storage), 직접 연결 스토리지(`DAS`, Direct attached Storage)가 있습니다.
 
-### 블록 스토리지
+#### 블록 스토리지
 
 Block Storage는 데이터를 블록으로 쪼갭니다. 즉 데이터를 별도의 조각으로 분리해 저장하는 것입니다.
 각 데이터 블록은 고유 식별자를 부여받는데, 이는 스토리지 시스템이 더 작은 데이터 조각을 원하는 곳에 배치할 수 있도록 해줍니다.
@@ -115,7 +133,7 @@ Block Storage는 데이터를 블록으로 쪼갭니다. 즉 데이터를 별도
 메타데이터를 처리하는 기능이 제한적이므로, 애플리케이션 또는 데이터베이스 수준에서 취급해야 합니다.
 그러면 개발자나 시스템 관리자의 업무 부담이 늘어나게 됩니다.
 
-### 오브젝트 스토리지
+#### 오브젝트 스토리지
 
 Object Storage는 파일들이 작게 나뉘어 여러 하드웨어에 분산되는 평면적(flat) 구조입니다.
 오브젝트 스토리지에서 데이터는 오브젝트라 불리는 개별 단위로 나뉘며, 서버의 블록이나 폴더에 파일을 보관하는 대신 단일 리포지토리에 보관됩니다.
@@ -134,30 +152,23 @@ Object Storage는 파일들이 작게 나뉘어 여러 하드웨어에 분산되
 
 ## Docker (Container) Storage
 
-- [Manage data in Docker](https://docs.docker.com/storage/) - Docker docs
+### Union Mount
 
-![types-of-mounts-volume.png](../images/storage/types-of-mounts-volume.png)
-
-_[Use volumes](https://docs.docker.com/storage/volumes/)_
-
-![types-of-mounts-bind.png](../images/storage/types-of-mounts-bind.png)
-
-_[Use bind mounts](https://docs.docker.com/storage/bind-mounts/)_
-
-![types-of-mounts-tmpfs.png](../images/storage/types-of-mounts-tmpfs.png)
-
-_[Use volumes](https://docs.docker.com/storage/volumes/)_
+- [투명 셀로판지 이론을 통한 Overlay FS 사용 방법과 유니온 마운트 (Union Mount) 이해하기](https://blog.naver.com/alice_k106/221530340759) - alice
+- [Union Mount, AUFS, Docker Image Layer](https://ssup2.github.io/theory_analysis/Union_Mount_AUFS_Docker_Image_Layer/) - ssup2
+- 유니온 마운트란 하나의 마운트 포인트에 여러 개의 디렉터리를 마운트함으로써, 마치 하나의 통합된 디렉터리처럼 보이게 하는 것을 의미합니다.
 
 ### Storage Driver
 
-스토리지 드라이버를 사용하면 컨테이너의 writable 레이어에 데이터를 생성 할 수 있습니다.
-컨테이너가 삭제 된 후에는 파일이 유지되지 않으며, 읽기-쓰기 속도가 기본 파일 시스템 성능보다 낮습니다.
-
-- Docker 이미지는 일련의 레이어로 구성됩니다.
-- 새 컨테이너를 만들 때 기본 레이어 위에 새로운 writable 레이어를 추가합니다.
+- 스토리지 드라이버를 사용하면 컨테이너의 writable 레이어(컨테이너 레이어)에 데이터를 생성할 수 있습니다.
+- 컨테이너가 삭제 된 후에는 **"파일이 유지되지 않으며"**, 읽기-쓰기 속도가 기본 파일 시스템 성능보다 낮습니다.
+- Docker 이미지는 [copy-on-write](https://docs.docker.com/storage/storagedriver/#the-copy-on-write-cow-strategy) (`CoW`) 전략을 사용해 일련의 레이어로 구성됩니다.
+- 새 컨테이너를 만들 때 기존 레이어 위에 새로운 writable 레이어를 추가합니다.
   - 마지막 레이어를 제외한 각 레이어는 읽기 전용(Read only)입니다.
   - 컨테이너와 이미지의 주요 차이점 중 하나가 바로 쓰기 가능한 최상위 레이어입니다
 - 각 레이어는 이전 레이어와의 차이점 집합으로 스택처럼 위로 쌓입니다.
+  - [이 글](../container-runtime/building-container-images-in-go.md)에서 Go 언어로 레이어를 생성해 새로운 이미지를 만드는 법을 확인할 수 있습니다.
+- 아래 명령어를 사용해 컨테이너 사이즈를 확인할 수 있습니다.
 
 ```bash
 docker ps --size
@@ -178,16 +189,16 @@ docker ps --size
 ```
 
 - `size`: 각 컨테이너의 writable 레이어에 사용되는 데이터(on disk) 크기입니다.
-- `virtual size`: 컨테이너에서 사용하는 R/O 이미지 데이터와 컨테이너의 writable 레이어에 사용되는 데이터 크기.
+- `virtual size`: 컨테이너에서 사용하는 R/O 이미지 데이터와 컨테이너의 writable 레이어에 사용되는 데이터 크기입니다.
 - 총 디스크 사용량을 과대 평가하지 않기 위해 공통 레이어를 가진 컨테이너의 사이즈는 합산되지 않습니다.
 - 공통 레이어는 R/O 데이터를 공유합니다.
   - 동일한 이미지로 여러 컨테이너가 실행될 경우, 컨테이너에 대한 총 디스크 크기는 SUM(컨테이너들의 `size`) + 하나의 이미지 크기(`virtual size` - `size`)가 됩니다.
 - 디스크 사이즈 계산에 제외되는 부분
-  - log files if you use the `json-file` logging driver.
-  - `Volumes` and `bind mounts` used by the container.
-  - the container’s `configuration files`.
-  - Memory written to disk (if `swapping` is enabled).
-  - `Checkpoints`, if you’re using the experimental checkpoint/restore feature.
+  - `json-file` 로깅 드라이버를 사용했을 때 로그 파일.
+  - 컨테이너가 사용하는 `Volumes` 및 `bind mounts`.
+  - 컨테이너의 `configuration files`.
+  - `swapping`이 활성화되어 디스크에 옮겨진 메모리 데이터
+  - 실험적인 기능인 checkpoint/restore를 사용했을 때 `Checkpoints`
 - 아래 그림에서 `Container layer`가 `writable layer`입니다.
 
 ![aufs-layers.jpg](../images/storage/aufs-layers.jpg)
@@ -204,6 +215,32 @@ _[Overlay FS](https://docs.docker.com/storage/storagedriver/overlayfs-driver/)_
   - `btrfs`, `zfs`는 메모리를 많이 요구합니다.
   - `zfs`는 PaaS와 같은 고밀도(high-density) 워크로드에 적합합니다.
 
+### Volume Driver
+
+- [Manage data in Docker](https://docs.docker.com/storage/) - Docker docs
+
+도커의 볼륨 드라이버는 컨테이너에서 생성하고 사용하는 **"데이터를 유지하기 위한"** 기술입니다.
+writable layer에 쓰인 데이터를 사용자가 지정한 볼륨에 마운트시켜서
+컨테이너가 제거되어도 볼륨을 유지해서 데이터를 보존하는 전략을 사용합니다.
+다시 말하면 유니온 마운트를 사용하지 않고 데이터를 호스트에 저장합니다.
+
+![types-of-mounts-volume.png](../images/storage/types-of-mounts-volume.png)
+
+_[Use volumes](https://docs.docker.com/storage/volumes/)_
+
+`volume`은 전적으로 도커가 관리하지만
+`bind mount` 같은 경우 호스트 머신의 OS와 디렉터리 구조에 의존합니다.
+
+![types-of-mounts-bind.png](../images/storage/types-of-mounts-bind.png)
+
+_[Use bind mounts](https://docs.docker.com/storage/bind-mounts/)_
+
+`tmpfs mount`는 이름 그대로 호스트 메모리에 일시적으로만 남으며 컨테이너가 멈추면 파일이 유지되지 않습니다.
+
+![types-of-mounts-tmpfs.png](../images/storage/types-of-mounts-tmpfs.png)
+
+_[Use volumes](https://docs.docker.com/storage/volumes/)_
+
 ```bash
 docker system df
 # TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
@@ -217,6 +254,8 @@ docker system df
 # docker system info -f '{{json .}}' | jq '.Driver'
 docker info -f '{{json .}}' | jq '.Driver'
 # "overlay2"
+docker info -f '{{json .}}' | jq '.LoggingDriver'
+# "json-file"
 docker info -f '{{json .}}' | jq '.Plugins.Volume'
 # [
 #   "local"
@@ -237,12 +276,6 @@ docker info -f '{{json .}}' | jq '.DriverStatus'
 #   ]
 # ]
 ```
-
-### Union Mount
-
-- [투명 셀로판지 이론을 통한 Overlay FS 사용 방법과 유니온 마운트 (Union Mount) 이해하기](https://blog.naver.com/alice_k106/221530340759) - alice
-- [Union Mount, AUFS, Docker Image Layer](https://ssup2.github.io/theory_analysis/Union_Mount_AUFS_Docker_Image_Layer/) - ssup2
-- 유니온 마운트란 하나의 마운트 포인트에 여러 개의 디렉터리를 마운트함으로써, 마치 하나의 통합된 디렉터리처럼 보이게 하는 것을 의미합니다.
 
 ## Kubernetes Storage API
 
@@ -360,3 +393,4 @@ _출처: [Kubernetes in Action (1/E)](https://www.manning.com/books/kubernetes-i
 
 - [Spec v1.4.0](https://github.com/container-storage-interface/spec/blob/v1.4.0/spec.md) - GitHub
 - 스토리지 벤더가 플러그인을 한 번만 개발해도 수많은 컨테이너 오케스트레이션 시스템에서 동작할 수 있는 산업 표준 컨테이너 스토리지 인터페이스를 정의합니다.
+- TODO: write my own external provisioner
