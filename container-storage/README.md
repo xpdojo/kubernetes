@@ -223,6 +223,7 @@ _[Overlay FS](https://docs.docker.com/storage/storagedriver/overlayfs-driver/)_
 writable layer에 쓰인 데이터를 사용자가 지정한 볼륨에 마운트시켜서
 컨테이너가 제거되어도 볼륨을 유지해서 데이터를 보존하는 전략을 사용합니다.
 다시 말하면 유니온 마운트를 사용하지 않고 데이터를 호스트에 저장합니다.
+(ex: `--volume myvol:/home/markruler/test`)
 
 ![types-of-mounts-volume.png](../images/storage/types-of-mounts-volume.png)
 
@@ -230,6 +231,7 @@ _[Use volumes](https://docs.docker.com/storage/volumes/)_
 
 `volume`은 전적으로 도커가 관리하지만
 `bind mount` 같은 경우 호스트 머신의 OS와 디렉터리 구조에 의존합니다.
+(ex: `--volume ./hostdata:/home/markruler/containerdata`)
 
 ![types-of-mounts-bind.png](../images/storage/types-of-mounts-bind.png)
 
@@ -314,7 +316,23 @@ kubectl explain pod.spec.volumes
   - 파드 개발자가 클러스터에서 사용할 수 있는 실제 네트워크 스토리지 인프라에 대한 지식을 갖추고 있어야 합니다.
   - `nfs`: 기존 NFS (네트워크 파일 시스템) 볼륨을 파드에 마운트 할수 있습니다.
     파드를 제거할 때 지워지는 `emptyDir` 와는 다르게 `nfs` 볼륨의 내용은 유지되고, 볼륨은 그저 마운트 해제만 됩니다.
-    `nfs`를 사용하면 export한 NFS 서버를 알아야 하지만 `nfs-provisioner`를 사용하면 사용자가 export 정보를 알지 못해도 동적으로 프로비저닝할 수 있습니다.
+
+```yaml
+# https://github.com/kubernetes/examples/blob/master/staging/volumes/nfs/nfs-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs
+spec:
+  capacity:
+    storage: 1Mi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: nfs-server.default.svc.cluster.local
+    path: "/"
+```
+
 - 영구적: 기존 스토리지 기술에서 파드를 분리합니다.
   - 쿠버네티스에 애플리케이션을 배포하는 개발자는 파드를 실행하는 데
     사용되는 물리적 서버 유형을 알 수 없는 것과 마찬가지로
@@ -323,6 +341,22 @@ kubectl explain pod.spec.volumes
   - `persistentVolumeClaim`: 사전 또는 동적으로 프로비저닝된 영구 스토리지를 사용하는 방법입니다.
   - `configMap`, `secret`, `downwardAPI`: 특정 쿠버네티스 리소스 및 클러스터 정보를 파드에 노출하는 데 사용되는 특수한 유형의 볼륨입니다.
   - `cinder`, `cephfs`, `iscsi`, `glusterfs`, `vsphere-Volume`, `...`: 다른 유형의 네트워크 스토리지를 마운트하는 데 사용됩니다.
+  - 위의 `nfs` PV를 사용하면 export한 NFS 서버를 알아야 하지만 `nfs-provisioner` SC를 사용하면 사용자가 export 정보를 알지 못해도 동적으로 프로비저닝할 수 있습니다.
+
+```yaml
+# https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/test-claim.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-claim
+spec:
+  storageClassName: managed-nfs-storage
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+```
 
 ![kubernetes-volume-hostpath.jpeg](../images/storage/kubernetes-volume-hostpath.png)
 
@@ -352,15 +386,18 @@ _출처: [Kubernetes in Action (2/E)](https://www.manning.com/books/kubernetes-i
 
 ### [StorageClass](https://kubernetes.io/ko/docs/concepts/storage/storage-classes/) (`SC`)
 
-- StorageClass는 관리자가 제공하는 스토리지의 `classes`\*를 설명할 수 있는 방법을 제공합니다.
+- `StorageClass`는 관리자가 제공하는 스토리지의 `classes`\*를 설명할 수 있는 방법을 제공합니다.
+  즉, 다양한 스토리지들을 추상화시켜서 해당 스토리지에 대한 정책이나 타입 등을 지정할 수 있게 됩니다.
   - \*class: a set or category of things having some property or attribute in common and differentiated from others by kind, type, or quality.
+  - 여담이지만 C언어에도 데이터의 저장 위치와 사용 범위를 지정하는 `Storage class`라는 키워드가 있습니다.
 - 쿠버네티스 자체는 클래스가 무엇을 나타내는지에 대해 상관하지 않습니다. 다른 스토리지 시스템에서는 이 개념을 `profile`이라고도 합니다.
   - 다른 클래스는 서비스의 품질 수준 또는 백업 정책, 클러스터 관리자가 정한 임의의 정책에 매핑될 수 있습니다.
   - 애플리케이션을 배포하는 개발자가 파드를 실행하는 데 사용되는 물리적 서버 특성을 알 필요가 없는 것처럼 클러스터가 제공하는 스토리지 기술을 알 필요가 없습니다.
   - 인프라에 대한 세부 정보는 클러스터 관리자(admin/operator)가 처리해야 합니다.
 - [동적 볼륨 프로비저닝](https://kubernetes.io/ko/docs/concepts/storage/dynamic-provisioning/)의 구현은 `storage.k8s.io` API 그룹의 `StorageClass` API 오브젝트를 기반으로 합니다.
   - [쿠버네티스](https://kubernetes.io/docs/concepts/storage/storage-classes/#provisioner)에서 직접 제공하는 `internal provisioner`와
-    [볼륨 프로비저닝 디자인](https://github.com/kubernetes/community/blob/066f8d011c/contributors/design-proposals/storage/volume-provisioning.md)을 따라 작성된 독립적인 프로그램인 `external provisioner`가 있습니다.
+    [볼륨 프로비저닝 디자인](https://github.com/kubernetes/community/blob/066f8d011c/contributors/design-proposals/storage/volume-provisioning.md)을 따라 작성된 독립적인 프로그램인 "external provisioner"가 있습니다.
+    ("out-of-tree provisioner"라고도 [합니다](https://cloud-provider-vsphere.sigs.k8s.io/concepts/in_tree_vs_out_of_tree.html). [KEP-1179](https://github.com/kubernetes/enhancements/blob/0e4d5df19d396511fe41ed0860b0ab9b96f46a2d/keps/sig-cloud-provider/1179-building-without-in-tree-providers/README.md))
   - internal 프로비저너는 `kubernetes.io`가 접두사로 붙고 쿠버네티스와 함께 제공됩니다.
   - external 프로비저너의 작성자는 코드의 수명, 프로비저너의 배송 방법, 실행 방법, (Flex를 포함한)볼륨 플러그인 등에 대한 완전한 재량권을 가집니다.
     - [external provisioner를 작성하기 위한 라이브러리](https://github.com/kubernetes-sigs/sig-storage-lib-external-provisioner) - GitHub

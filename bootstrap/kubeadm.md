@@ -114,6 +114,16 @@ sudo sysctl --system
 
 ```bash
 kubeadm init
+# kubeadm init --kubernetes-version=1.19.0 \
+#   --pod-network-cidr=10.233.0.0/18 \
+#   --service-cidr=10.233.64.0/18 \
+#   --apiserver-advertise-address=192.168.7.191 \
+#   --v=5
+```
+
+- 컨트롤 플레인 노드 하나라면 아래 명령어 실행
+
+```bash
 # kubectl taint nodes --all node-role.kubernetes.io/master-
 ```
 
@@ -139,6 +149,10 @@ EOF
 
 # kubeadm init --service-cidr=10.233.0.0/18 --pod-network-cidr=10.233.64.0/18 --apiserver-advertise-address=192.168.7.191 --kubernetes-version=1.18.15 --v=5
 kubeadm init --config=$HOME/pkg/kubeadm-config.yaml --upload-certs --v=5
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
 ```
 
 - [token](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-token/)
