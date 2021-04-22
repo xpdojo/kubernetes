@@ -18,6 +18,7 @@
 
 ```bash
 sudo -i
+apt-get update
 apt-get install -y docker.io
 ```
 
@@ -40,8 +41,8 @@ cat > /etc/docker/daemon.json <<EOF
 EOF
 
 systemctl enable docker
-systemctl daemon-reload
 systemctl restart docker
+# systemctl daemon-reload
 ```
 
 - cgroup driver의 기본값이 `cgoupfs`이기 때문에 변경해준다.
@@ -57,7 +58,8 @@ curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.
 echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
 apt-get update
 apt list kubeadm -a
-apt-get install kubeadm=1.18.17-00
+# apt-get install kubeadm=1.19.10-00 kubectl=1.19.10-00 kubelet=1.19.10-00
+apt-get install kubeadm=1.18.18-00 kubectl=1.18.18-00 kubelet=1.18.18-00
 apt-mark hold kubelet kubeadm kubectl
 ```
 
@@ -71,7 +73,8 @@ sed -e '/swap/s/^/#/g' -i /etc/fstab
 - 파드의 QoS, Automatic bin packing, 예측 가능성, 일관성, 성능 저하
 
 ```bash
-setenforce 0
+# apt install -y selinux-utils
+# setenforce 0
 sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 ```
 
