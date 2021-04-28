@@ -4,16 +4,15 @@
 
 _출처: [Kubernetes Patterns](https://developers.redhat.com/blog/2020/05/11/top-10-must-know-kubernetes-design-patterns/) - Red Hat_
 
-## Kubernetes [Workloads](https://kubernetes.io/ko/docs/concepts/workloads/)
+## Kubernetes [Workloads](https://kubernetes.io/ko/docs/concepts/workloads/) 중 하나인 `Job`
 
-- [Workloads](https://kubernetes.io/ko/docs/concepts/workloads/) - Kubernetes Docs
 - `Job` 및 `CronJob`은 실행 완료 후 중단되는 작업을 정의한다.
 - `CronJob`이 스케줄에 따라 반복되는 반면, `Job`은 단 한 번의 작업을 나타낸다.
 - `Job`도 `Pod`를 생성하고 관리하는 컨트롤러의 역할을 한다.
 - `CronJob`은 `Job`을 Unix 시스템의 cron 형식처럼 주기적으로 동작시킨다.
 - `CronJob` 오브젝트는 crontab (cron table) 파일의 한 줄과 같다.
 
-## `Job` 정리
+## 작업이 끝난 `Job` 오브젝트 정리하기
 
 - [Clean up finished jobs automatically](https://kubernetes.io/docs/concepts/workloads/controllers/job/#clean-up-finished-jobs-automatically) - Kubernetes Docs
 - 프로세스가 종료되면 `CronJob`이 생성한 `Pod`는 `Completed` 상태가 되는데 최대 5개만 표시가 된다.
@@ -37,3 +36,7 @@ spec:
           command: ["perl", "-Mbignum=bpi", "-wle", "print bpi(2000)"]
       restartPolicy: Never
 ```
+
+### 크론 스케줄 문법
+
+- [공식 문서](https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#cron-schedule-syntax) - Kubernetes
