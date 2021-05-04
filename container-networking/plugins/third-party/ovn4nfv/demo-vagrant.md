@@ -7,6 +7,8 @@
     - [Kubernetes 클러스터 구성](#kubernetes-클러스터-구성)
     - [Service Function Chaining Demo](#service-function-chaining-demo)
     - [Clean Up](#clean-up)
+      - [graceful](#graceful)
+      - [force](#force)
   - [Troubleshooting](#troubleshooting)
 
 ## Demo
@@ -58,29 +60,13 @@ addgroup libvirtd
 ```bash
 git clone --branch master https://github.com/akraino-edge-stack/icn-ovn4nfv-k8s-network-controller.git
 cd ovn4nfv-k8s-plugin/
-```
-
-```diff
-vi ./demo/sfc-setup/setup.sh
-- vagrant_version=2.2.4
-+ vagrant_version=2.2.14
-```
-
-```bash
 ./demo/sfc-setup/setup.sh -p libvirt
 ```
 
 ```bash
 export VAGRANT_DEFAULT_PROVIDER=libvirt
-# apt install virtualbox
-# export VAGRANT_DEFAULT_PROVIDER=virtualbox
-```
-
-```bash
 vagrant up
-
-# Unknown Error
-# master: dpkg-preconfigure: unable to re-open stdin: No such file or directory
+# vagrant up --provider=libvirt
 ```
 
 ```bash
@@ -153,6 +139,7 @@ vi /etc/systemd/resolved.conf
 vi /etc/netplan/01-netcfg.yaml
 # [8.8.8.8, 8.8.4.4]
 
+netplan apply
 systemctl restart systemd-resolved.service
 ```
 
@@ -188,18 +175,19 @@ sestatus
 ufw status
 # Status: inactive
 
-# cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
-# br_netfilter
-# EOF
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
 
-# cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
-# net.bridge.bridge-nf-call-iptables = 1
-# net.bridge.bridge-nf-call-ip6tables = 1
-# EOF
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
 ```
 
 ```bash
-export KUBERNETES_VERSION=1.19.0
+# 1.19+
+export KUBERNETES_VERSION=1.19.10
 ```
 
 ```bash
@@ -210,8 +198,9 @@ apt-get install \
   -y
 ```
 
+Control Plane을 초기화합니다.
+
 ```bash
-# master node
 kubeadm init \
 --v 5 \
 --kubernetes-version ${KUBERNETES_VERSION} \
@@ -430,17 +419,16 @@ iptables -vL FORWARD
 ```
 
 ```bash
-git clone --branch master https://github.com/akraino-edge-stack/icn-ovn4nfv-k8s-network-controller.git
+git clone --branch master https://github.com/markruler/icn-ovn4nfv-k8s-network-controller.git
 cd icn-ovn4nfv-k8s-network-controller/
-rm -f deploy/*-centos.yaml
-rm -f deploy/crd/*_cr.yaml
+rm -f deploy/crds/*_cr.yaml
 ```
 
 ```bash
 curl -LO https://docs.projectcalico.org/manifests/calico.yaml
-# TODO: IP_AUTODETECTION_METHOD 꼭 넣어줘야 하는지 테스트
-
 kubectl apply -f calico.yaml
+# kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=cidr=10.0.2.0/24
+# kubectl set env daemonset/calico-node -n kube-system IP_AUTODETECTION_METHOD=interface=eth0
 ```
 
 ```diff
@@ -448,15 +436,6 @@ kubectl apply -f calico.yaml
 +             # Specify interface
 +             - name: IP_AUTODETECTION_METHOD
 +               value: "interface=eth0"
-```
-
-```bash
-# Deploy ovn4nfv
-kubectl apply -f deploy/ovn-daemonset.yaml
-kubectl apply -f deploy/ovn4nfv-k8s-plugin.yaml
-kubectl apply -f deploy/operator_roles.yaml
-kubectl apply -f deploy/operator.yaml
-kubectl apply -f deploy/crds/
 ```
 
 - [deploy/multus-daemonset.yml 참고](https://github.com/k8snetworkplumbingwg/reference-deployment/blob/master/multus-calico/multus-daemonset.yml)
@@ -495,6 +474,18 @@ index 08c3d6d..ed05463 100644
 kubectl apply -f deploy/multus-daemonset.yml
 ```
 
+```bash
+# Deploy ovn4nfv
+kubectl apply -f deploy/ovn-daemonset.yaml
+kubectl apply -f deploy/ovn4nfv-k8s-plugin.yaml
+
+kubectl apply -f deploy/operator_roles.yaml
+kubectl apply -f deploy/operator.yaml
+
+# deploy/ovn4nfv-k8s-plugin.yaml에 포함
+# kubectl apply -f deploy/crds/
+```
+
 - 만약 core-dns나 calico-node가 정상적으로 제어되지 않는다면 수동으로 삭제
 
 ```bash
@@ -502,37 +493,6 @@ kubectl -n kube-system delete po -l k8s-app=calico-node
 kubectl -n kube-system delete po -l k8s-app=calico-kube-controllers
 
 kubectl -n kube-system delete po -l k8s-app=kube-dns
-```
-
-```bash
-# tail -f /var/log/calico/cni/cni.log
-# tail -f /var/log/openvswitch/ovn4k8s.log
-```
-
-- ~~fix typo~~
-
-> [commit](https://github.com/akraino-edge-stack/icn-ovn4nfv-k8s-network-controller/commit/3aacd80e874d257699421d64af4dce4150da9733)
-
-`git diff 3aacd80e874d257699421d64af4dce4150da9733~ 3aacd80e874d257699421d64af4dce4150da9733`
-
-```diff
-diff --git a/demo/sfc-setup/deploy/sfc.yaml b/demo/sfc-setup/deploy/sfc.yaml
-index 98af02a..1215097 100644
---- a/demo/sfc-setup/deploy/sfc.yaml
-+++ b/demo/sfc-setup/deploy/sfc.yaml
-@@ -9,10 +9,10 @@ spec:
-     namespace: "default"
-     networkChain: "app=slb,dync-net1,app=ngfw,dync-net2,app=sdwan"
-     leftNetwork:
--    - networkName: "right-pnetwork"
-+    - networkName: "left-pnetwork"
-       gatewayIp: "172.30.10.2"
-       subnet: "172.30.10.0/24"
-     rightNetwork:
--    - networkName: "left-pnetwork"
-+    - networkName: "right-pnetwork"
-       gatewayIp: "172.30.20.2"
-       subnet: "172.30.20.0/24"
 ```
 
 데모용 `Network`와 `Deployment`를 배포합니다.
@@ -619,12 +579,17 @@ kubectl get networkchaining example-networkchaining -o jsonpath-as-json='{.spec}
 # ]
 ```
 
+ms1 파드에서 `traceroute` 명령어를 통해 트래픽이 잘 지나가는지 확인합니다.
+
+```bash
+kubectl exec -it $(kubectl get po -l app=ms1 --no-headers) -- traceroute 8.8.8.8
+```
+
 TM1 노드에서 `traceroute` 명령어를 통해 트래픽이 잘 지나가는지 확인합니다.
 
 ```bash
 vagrant ssh tm1-node
 
-traceroute 8.8.8.8
 traceroute kubernetes.io
 # traceroute to kubernetes.io (147.75.40.148), 64 hops max
 #   1   172.30.10.3  0.553ms  0.141ms  0.094ms
@@ -634,6 +599,38 @@ traceroute kubernetes.io
 ```
 
 ### Clean Up
+
+#### graceful
+
+```bash
+# on master
+kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
+
+# on minion
+kubeadm reset
+
+iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+iptables -vL
+
+# on master
+kubeadm reset
+```
+
+```bash
+# all nodes
+systemctl stop kubelet
+systemctl stop docker
+
+rm -rf /opt/cni/bin/*
+rm -rf /var/lib/cni/*
+rm -rf /var/lib/kubelet/*
+rm -rf /etc/cni/net.d/*
+
+systemctl start docker
+systemctl start kubelet
+```
+
+#### force
 
 ```bash
 vagrant destroy --parallel

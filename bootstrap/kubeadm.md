@@ -187,7 +187,9 @@ kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 
 ```bash
 # kubeadm join --token <token> <control-plane-host>:6443 --discovery-token-ca-cert-hash sha256:<hash>
-kubeadm join 192.168.7.182:6443 --token j9hs6q.qqmixdn74lksqpl0 --discovery-token-ca-cert-hash sha256:3c18620c7b79f2c90a9268ea0c322536fa0b4c8b4bb5b0f34fb702b321436585
+kubeadm join 192.168.7.182:6443 \
+  --token j9hs6q.qqmixdn74lksqpl0 \
+  --discovery-token-ca-cert-hash sha256:3c18620c7b79f2c90a9268ea0c322536fa0b4c8b4bb5b0f34fb702b321436585
 ```
 
 ## [Clean up](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#tear-down)
