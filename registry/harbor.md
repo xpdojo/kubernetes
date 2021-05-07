@@ -78,34 +78,33 @@ tar zxvf harbor-online-installer-v2.2.1.tgz
 cd harbor
 ```
 
-```bash
-cp harbor.yml.tmpl harbor.yml
-vi harbor.yml
-```
-
-```bash
-export HARBOR_HOST=192.168.7.229
-```
-
-```yaml
-hostname: 192.168.7.229
-
-http:
-  port: 80
-
-# https:
-#  port: 443
-
-harbor_admin_password: Harbor12345
-
-data_volume: /data/harbor
-```
-
 처음 실행한다면 아래 명령어를 사용한다.
 TLS를 지원한다면 OCI 표준을 지원하는 `helm chart push` 명령어를 사용할 수 있다.
 반대로 TLS를 지원하지 않는다면 Helm 차트를 저장하기 위해 Chartmuseum을 같이 배포해야 한다.
 `./prepare --with-chartmuseum` 명령을 사용하면 Chartmuseum 설정을 포함하는 매니페스트 파일들이 생성된다.
 그러면 Harbor와 같이 배포된다.
+
+설정 템플릿을 복사하고
+테스트를 위해 `HTTPS` 프로토콜 지원은 생략한다.
+
+```bash
+cp harbor.yml.tmpl harbor.yml
+```
+
+```yaml
+# harbor.yml
+hostname: 192.168.7.229
+
+http:
+  port: 8888
+
+# https:
+#  port: 443
+
+harbor_admin_password: Harbor12345 # 대소문자를 구분한다.
+
+data_volume: /data/harbor
+```
 
 ```bash
 sudo ./prepare --with-chartmuseum
@@ -160,6 +159,7 @@ docker ps --size
 ```
 
 ```bash
+export HARBOR_HOST=192.168.7.229:8888
 curl ${HARBOR_HOST}/api/v2.0/health
 ```
 
@@ -181,12 +181,23 @@ curl ${HARBOR_HOST}/api/v2.0/health
 
 ## LDAP 설정
 
-- `http://${HOSTNAME}/harbor/configs`
-- `Administration`
-- `Configuration`
-- `Authentication` - `Auth Mode` - `LDAP`
+`http://${HOSTNAME}/harbor/configs`
+
+> Administration > Configuration > Authentication > Auth Mode > LDAP
 
 ## Project
+
+먼저 Harbor 웹에서 `Project`를 생성해야 해당 프로젝트 이름으로 접근할 수 있다.
+프로젝트를 생성했다면 Docker로 접근해보자.
+
+```json
+// /etc/docker/daemon.json
+{
+  "insecure-registries": [
+    "192.168.7.229:8888"
+  ]
+}
+```
 
 ```bash
 export HARBOR_PROJECT=dist
