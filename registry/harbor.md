@@ -4,13 +4,14 @@
   - [참고](#참고)
   - [설치](#설치)
     - [Prerequisite](#prerequisite)
+      - [Hardware](#hardware)
+      - [Software](#software)
     - [Installation](#installation)
   - [LDAP 설정](#ldap-설정)
-  - [`Projects`](#projects)
+  - [Project](#project)
     - [Docker Image](#docker-image)
     - [Helm Chart](#helm-chart)
   - [Clean up](#clean-up)
-  - [Restart](#restart)
 
 ## 참고
 
@@ -20,6 +21,22 @@
 ## [설치](https://goharbor.io/docs/2.2.0/install-config/)
 
 ### [Prerequisite](https://goharbor.io/docs/latest/install-config/installation-prereqs/)
+
+#### Hardware
+
+| Resource | Minimum | Recommended |
+| -------- | ------- | ----------- |
+| CPU      | 2 CPU   | 4 CPU       |
+| Mem      | 4 GB    | 8 GB        |
+| Disk     | 40 GB   | 160 GB      |
+
+#### Software
+
+| Software       | Version                       | Description                                                              |
+| -------------- | ----------------------------- | ------------------------------------------------------------------------ |
+| Docker engine  | Version 17.06.0-ce+ or higher | [Docker Engine documentation](https://docs.docker.com/engine/install/)   |
+| Docker Compose | Version 1.18.0 or higher      | [Docker Compose documentation](https://docs.docker.com/compose/install/) |
+| Openssl        | Latest is preferred           | Used to generate certificate and keys for Harbor                         |
 
 ### [Installation](https://goharbor.io/docs/latest/install-config/download-installer/)
 
@@ -67,29 +84,56 @@ vi harbor.yml
 ```
 
 ```bash
-export HARBOR_HOST=192.168.213.10
+export HARBOR_HOST=192.168.7.229
 ```
 
 ```yaml
-# 호스트 도메인명 혹은 IP 지정
-hostname: 192.168.213.10
+hostname: 192.168.7.229
 
-# https 주석 처리
+http:
+  port: 80
+
 # https:
 #  port: 443
 
-# admin 패스워드 지정
 harbor_admin_password: Harbor12345
 
 data_volume: /data/harbor
 ```
 
+처음 실행한다면 아래 명령어를 사용한다.
+TLS를 지원한다면 OCI 표준을 지원하는 `helm chart push` 명령어를 사용할 수 있다.
+반대로 TLS를 지원하지 않는다면 Helm 차트를 저장하기 위해 Chartmuseum을 같이 배포해야 한다.
+`./prepare --with-chartmuseum` 명령을 사용하면 Chartmuseum 설정을 포함하는 매니페스트 파일들이 생성된다.
+그러면 Harbor와 같이 배포된다.
+
 ```bash
+sudo ./prepare --with-chartmuseum
 sudo ./install.sh
 ```
 
+![harbor-helm.png](../images/registry/harbor-helm.png)
+
+한 번 설치한 이후에는 다음 명령어를 사용해서 실행하고 멈출 수 있다.
+
 ```bash
-sudo docker-compose ps
+# Create and start containers
+docker-compose up --detach
+# Stop and remove resources
+docker-compose down
+```
+
+```bash
+# Start services
+docker-compose start
+# Stop services
+docker-compose stop
+# Pause services
+docker-compose pause
+```
+
+```bash
+docker-compose ps
 #       Name                     Command                  State                 Ports
 # ---------------------------------------------------------------------------------------------
 # harbor-core         /harbor/entrypoint.sh            Up (healthy)
@@ -102,7 +146,7 @@ sudo docker-compose ps
 # registry            /home/harbor/entrypoint.sh       Up (healthy)
 # registryctl         /home/harbor/start.sh            Up (healthy)
 
-sudo docker ps --size
+docker ps --size
 # CONTAINER ID        IMAGE                                COMMAND                  CREATED             STATUS                    PORTS                       NAMES               SIZE
 # 76fb2a94b29e        goharbor/nginx-photon:v2.2.1         "nginx -g 'daemon of…"   14 minutes ago      Up 14 minutes (healthy)   0.0.0.0:80->8080/tcp        nginx               2B (virtual 40.3MB)
 # 5af0ac8829b2        goharbor/harbor-jobservice:v2.2.1    "/harbor/entrypoint.…"   14 minutes ago      Up 14 minutes (healthy)                               harbor-jobservice   1.64MB (virtual 165MB)
@@ -116,7 +160,23 @@ sudo docker ps --size
 ```
 
 ```bash
-curl ${HARBOR_HOST}
+curl ${HARBOR_HOST}/api/v2.0/health
+```
+
+```json
+{
+  "status": "healthy",
+  "components": [
+    { "name": "chartmuseum", "status": "healthy" },
+    { "name": "core", "status": "healthy" },
+    { "name": "database", "status": "healthy" },
+    { "name": "jobservice", "status": "healthy" },
+    { "name": "portal", "status": "healthy" },
+    { "name": "redis", "status": "healthy" },
+    { "name": "registry", "status": "healthy" },
+    { "name": "registryctl", "status": "healthy" }
+  ]
+}
 ```
 
 ## LDAP 설정
@@ -126,37 +186,84 @@ curl ${HARBOR_HOST}
 - `Configuration`
 - `Authentication` - `Auth Mode` - `LDAP`
 
-## `Projects`
+## Project
 
 ```bash
-export PROJECT_REPO=dist
-docker login http://${HARBOR_HOST}/${PROJECT_REPO} -u admin -p Harbor12345
+export HARBOR_PROJECT=dist
+docker login http://${HARBOR_HOST}/${HARBOR_PROJECT} -u admin -p Harbor12345
 ```
 
 ### Docker Image
 
 ```bash
-# docker tag SOURCE_IMAGE[:TAG] ${HARBOR_HOST}/${PROJECT_REPO}/REPOSITORY[:TAG]
-docker tag registry:2.7.1 ${HARBOR_HOST}/${PROJECT_REPO}/registry:2.7.1
+# docker tag SOURCE_IMAGE[:TAG] ${HARBOR_HOST}/${HARBOR_PROJECT}/REPOSITORY[:TAG]
+docker tag registry:2.7.1 ${HARBOR_HOST}/${HARBOR_PROJECT}/registry:2.7.1
 
-# docker push ${HARBOR_HOST}/${PROJECT_REPO}/REPOSITORY[:TAG]
-docker push ${HARBOR_HOST}/${PROJECT_REPO}/registry:2.7.1
+# docker push ${HARBOR_HOST}/${HARBOR_PROJECT}/REPOSITORY[:TAG]
+docker push ${HARBOR_HOST}/${HARBOR_PROJECT}/registry:2.7.1
 ```
 
 ```bash
-docker pull ${HARBOR_HOST}/${PROJECT_REPO}/registry:2.7.1
+docker pull ${HARBOR_HOST}/${HARBOR_PROJECT}/registry:2.7.1
 ```
 
 ### Helm Chart
 
+먼저 Harbor를 리포지터리로 등록해주어야 한다.
+
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add harbor http://${HARBOR_HOST}/chartrepo/${HARBOR_PROJECT}
+helm repo list
+# NAME          URL
+# bitnami       https://charts.bitnami.com/bitnami
+# harbor        http://192.168.7.229/chartrepo/dist/
+
+helm repo update
+```
+
+테스트해 볼 차트를 받는다.
+
+```bash
+cd /tmp
+helm pull bitnami/mariadb
+ls
+# mariadb-9.3.10.tgz
+```
+
+`helm push` 할 수 없다면 플러그인을 설치한다.
+
+```bash
+helm plugin install https://github.com/chartmuseum/helm-push.git
+```
+
+Chartmuseum을 통해 `push`, `pull`을 사용할 수 있다.
+
+```bash
+helm push mariadb-9.3.10.tgz harbor -u admin -p Harbor12345
+# Pushing mariadb-9.3.10.tgz to harbor...
+# Done.
+
+helm repo update
+helm search repo harbor
+# NAME            CHART VERSION APP VERSION DESCRIPTION
+# harbor/mariadb  9.3.10        10.5.9      Fast, reliable, scalable, and easy to use open-...
+# harbor/nginx    8.9.0         1.19.10     Chart for the nginx server
+```
+
+![harbor-helm-push.png](../images/registry/harbor-helm-push.png)
+
+```bash
+# 아직 OCI 표준 기능은 HTTP에서 정상적으로 동작하지 않는다.
+# https://github.com/helm/helm/issues/6324
+# HELM_EXPERIMENTAL_OCI=1 helm chart save nginx-8.9.0.tgz ${HARBOR_HOST}/${PROJECT_REPO}/nginx:8.9.0
+# HELM_EXPERIMENTAL_OCI=1 helm registry login ${HARBOR_HOST} --insecure
+# HELM_EXPERIMENTAL_OCI=1 helm chart push ${HARBOR_HOST}/${PROJECT_REPO}/nginx:8.9.0 --debug
+```
+
 ## Clean up
 
 ```bash
+# docker-compose down --volumes
 docker-compose down
-```
-
-## Restart
-
-```bash
-docker-copmose up -d
 ```
