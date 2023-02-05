@@ -320,9 +320,17 @@ v1.24 이후부터(정확하지 않음)는 CNI 플러그인을 설정하지 않�
 
 - [Install Calico CNI](https://docs.projectcalico.org/getting-started/kubernetes/self-managed-onprem/onpremises)
 
+- manifest
+
 ```sh
 # kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico-typha.yaml
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml
+```
+
+- operator
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/tigera-operator.yaml
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/custom-resources.yaml
 # kubectl delete -f $URL
 ```
@@ -337,6 +345,10 @@ kubectl -n kube-system delete pod --grace-period=0 --force $POD_NAME
 kubectl get nodes
 # NAME   STATUS   ROLES           AGE    VERSION
 # tost   Ready    control-plane   8m7s   v1.26.1
+```
+
+```sh
+kubectl get all -A
 ```
 
 ## 기타 설정 정보
@@ -359,6 +371,8 @@ kubectl get ev -n kube-system
 
 ```sh
 kubectl taint node --all node-role.kubernetes.io/master-
+# 다시 스케줄링 할 수 없도록 taint 추가
+# kubectl taint nodes master node-role.kubernetes.io=master:NoSchedule
 ```
 
 ```sh
