@@ -3,7 +3,7 @@
 - [kind](#kind)
   - [참고 자료](#참고-자료)
   - [Kind란?](#kind란)
-  - [`kind` 커맨드 도구 설치](#kind-커맨드-도구-설치)
+  - [Installing `kind`](#installing-kind)
   - [kind 클러스터 생성](#kind-클러스터-생성)
   - [kindnet](#kindnet)
   - [Ingress](#ingress)
@@ -23,7 +23,9 @@
 
 *출처: [kind 공식 문서](https://kind.sigs.k8s.io/docs/design/initial/)*
 
-## `kind` 커맨드 도구 설치
+## Installing `kind`
+
+- [Installing From Release Binaries](https://kind.sigs.k8s.io/docs/user/quick-start/#installing-from-release-binaries)
 
 ```bash
 curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64
@@ -31,11 +33,26 @@ chmod +x ./kind
 mv ./kind /some-dir-in-your-PATH/kind
 ```
 
+- [Installing With A Package Manager](https://kind.sigs.k8s.io/docs/user/quick-start/#installing-with-a-package-manager)
+
+```sh
+# macOS
+brew install kind
+
+# Windows
+choco install kind
+```
+
 ## kind 클러스터 생성
 
 ```bash
+kind create cluster -v=6 --name test
 # kind create cluster -v=6 --name test --image kindest/node:1.18.15
+```
+
+```sh
 # kind create cluster -v=6 --config ./bootstrap/kind-default.yaml
+
 cat <<EOF | kind create cluster --config -
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
