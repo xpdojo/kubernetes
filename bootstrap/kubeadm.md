@@ -2,10 +2,13 @@
 
 - [Creating a cluster with kubeadm](#creating-a-cluster-with-kubeadm)
   - [사전 준비](#사전-준비)
-    - [Ubuntu 20.04](#ubuntu-2004)
+    - [Ubuntu 22.04](#ubuntu-2204)
+    - [Container Runtime 설치](#container-runtime-설치)
     - [Configure container runtime](#configure-container-runtime)
       - [network bridge for k8s](#network-bridge-for-k8s)
   - [Control Plane 구축](#control-plane-구축)
+    - [에러](#에러)
+    - [init 후](#init-후)
   - [기타 설정 정보](#기타-설정-정보)
     - [CRI](#cri)
     - [1개의 노드](#1개의-노드)
@@ -19,52 +22,81 @@
 
 - [Docs](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
 
-### Ubuntu 20.04
+### Ubuntu 22.04
 
-- [Docker setup](https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker)
+- ~~[Docker setup](https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker)~~
 
 ```sh
-sudo -i
-apt-get update
-apt-get install -y docker.io
+sudo apt update -y && sudo apt upgrade -y && sudo apt autoremove -y
+```
+
+### Container Runtime 설치
+
+```sh
+# sudo -i
+# sudo apt-get install -y podman
+# podman info
+```
+
+- [Installing containerd](https://github.com/containerd/containerd/blob/27cf7f87dba9022b1de999da291b58691dbc25a4/docs/getting-started.md#option-2-from-apt-get-or-dnf)
+  - `containerd` 패키지를 설치하면 [문제가 많았다](https://github.com/containerd/containerd/issues/4581).
+  - Docker 리포지터리에 있는 `containerd.io` 를 설치하자.
+
+```sh
+apt-get remove docker docker-engine docker.io containerd runc
 ```
 
 ```sh
-mkdir -p /mnt/docker-data
-cat > /etc/docker/daemon.json <<EOF
-{
-  "data-root": "/mnt/docker-data",
-  "storage-driver": "overlay2",
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "insecure-registries": [
-    "worker01:5000",
-    "192.168.7.191:5000",
-  ]
-}
-EOF
-
-systemctl enable docker
-systemctl restart docker
-# systemctl daemon-reload
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg lsb-release
 ```
 
-- cgroup driver의 기본값이 `cgoupfs`이기 때문에 변경해준다.
-- `systemd`를 사용해야 하는 이유는 없다. 다만 같이 쓰지 않도록 주의한다. [참고](https://tech.kakao.com/2020/06/29/cgroup-driver/)
+Add Docker’s official GPG key:
 
 ```sh
-docker info
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+```
+
+Set up the repository:
+
+```sh
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
 
 ```sh
-apt-get install -y apt-transport-https ca-certificates curl
+sudo apt-get install containerd.io
+# containerd config default | sudo tee /etc/containerd/config.toml
+sudo systemctl restart containerd
+```
+
+```toml
+# /etc/containerd/config.toml
+disabled_plugins = []
+
+version = 2
+[plugins."io.containerd.grpc.v1.cri"]
+  systemd_cgroup = true
+[plugins."io.containerd.grpc.v1.cri".containerd]
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  runtime_type = "io.containerd.runc.v2"
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+  SystemdCgroup = true
 ```
 
 ```sh
-curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+systemctl restart containerd
+# Active: active (running)
+```
+
+- ~~cgroup driver의 기본값이 `cgoupfs`이기 때문에 변경해준다.~~
+- `systemd`를 사용해야 하는 이유는 없다. 다만 같이 쓰지 않도록 주의한다.
+  - [참고](https://tech.kakao.com/2020/06/29/cgroup-driver/)
+
+```sh
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
 ```
 
 ```sh
@@ -72,19 +104,22 @@ echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https:/
 ```
 
 ```sh
-apt-get update
+sudo apt update
 ```
 
 ```sh
-apt list kubeadm -a
+sudo apt list kubeadm -a
+```
+
+v1.24부터는 docker 제외
+
+```sh
+# KUBE_VERION=1.23.1-00 && sudo apt install kubeadm=$KUBE_VERION kubectl=$KUBE_VERION kubelet=$KUBE_VERION
+KUBE_VERION=1.26.1-00 && sudo apt install kubeadm=$KUBE_VERION kubectl=$KUBE_VERION kubelet=$KUBE_VERION
 ```
 
 ```sh
-KUBE_VERION=1.26.1-00 && apt-get install kubeadm=$KUBE_VERION kubectl=$KUBE_VERION kubelet=$KUBE_VERION
-```
-
-```sh
-apt-mark hold kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
 # kubelet set on hold.
 # kubeadm set on hold.
 # kubectl set on hold.
@@ -94,9 +129,9 @@ apt-mark hold kubelet kubeadm kubectl
 You **MUST** disable swap in order for the kubelet to work properly.
 
 ```sh
-swapoff -a
+sudo swapoff -a
 
-sed -e '/swap/s/^/#/g' -i /etc/fstab
+sudo sed -e '/swap/s/^/#/g' -i /etc/fstab
 ```
 
 netcat(`nc`)으로
@@ -189,34 +224,41 @@ net.ipv4.ip_forward = 1
 * Applying /etc/sysctl.conf ...
 ```
 
+```sh
+cat /proc/sys/net/ipv4/ip_forward
+# 1
+```
+
 - [참고](https://wiki.libvirt.org/page/Net.bridge.bridge-nf-call_and_sysctl.conf)
 - These control whether or not packets traversing the `bridge` are sent to iptables for processing.
 - `0`으로 설정하면 `bridge` 네트워크로 송수신되는 패킷이 `iptables` 규칙을 우회한다.
 - `1`로 설정하면 `bridge` 네트워크로 송수신되는 패킷이 `iptables` 규칙에 따라 제어된다.
 
-Container Runtime을 확인한다.
-disabled_plugins 에서 cri를 제거하거나 아예 주석 처리한다.
-
-```toml
-# /etc/containerd/config.toml
-# disabled_plugins = ["cri"]
-```
-
-```sh
-systemctl restart containerd
-# Active: active (running)
-```
-
 ## Control Plane 구축
 
 ```sh
-kubeadm init -v=5
+sudo kubeadm init -v=5
 # kubeadm init --kubernetes-version=1.19.0 \
 #   --pod-network-cidr=10.233.0.0/18 \
 #   --service-cidr=10.233.64.0/18 \
 #   --apiserver-advertise-address=192.168.7.191 \
 #   --v=5
 ```
+
+### 에러
+
+```sh
+# VM 실행 시 메모리를 1700MB 이상으로 설정한다.
+[ERROR Mem]: the system RAM (814 MB) is less than the minimum 1700 MB
+
+# containerd 말고 containerd.io 설치
+[ERROR CRI]: container runtime is not running: output: -
+
+# master 노드를 taint
+Feb 05 15:34:40 tost1 kubelet[52034]: E0205 15:34:40.132351   52034 kubelet.go:1711] "Failed creating a mirror pod for" err="Post \"https://172.27.23.205:6443/api/v1/namespaces/kube-system/pods\": read tcp 172.27.23.205:57068->172.27.23.205:6443: use of closed network connection" pod="kube-system/kube-scheduler-tost1"
+```
+
+### init 후
 
 ```sh
 # To start using your cluster, you need to run the following as a regular user:
@@ -246,12 +288,15 @@ kubectl get nodes -o wide
 
 ```sh
 kubectl get pods --all-namespaces -o wide
-# NAMESPACE     NAME                           READY   STATUS              RESTARTS       AGE   IP              NODE   NOMINATED NODE   READINESS GATES
-# kube-system   coredns-787d4945fb-q9xc4       0/1     ContainerCreating   0              37s   <none>          tost   <none>           <none>
-# kube-system   coredns-787d4945fb-qlsl6       0/1     ContainerCreating   0              37s   <none>          tost   <none>           <none>
-# kube-system   kube-apiserver-tost            1/1     Running             10 (61s ago)   93s   192.168.0.148   tost   <none>           <none>
-# kube-system   kube-controller-manager-tost   1/1     Running             11 (91s ago)   93s   192.168.0.148   tost   <none>           <none>
-# kube-system   kube-proxy-4zc6l               1/1     Running             1 (37s ago)    37s   192.168.0.148   tost   <none>           <none>
+kubectl get po -A -o wide
+# NAMESPACE     NAME                            READY   STATUS    RESTARTS   AGE     IP              NODE    NOMINATED NODE   READINESS GATES
+# kube-system   coredns-787d4945fb-c6wfc        1/1     Running   0          3m58s   10.88.0.2       tost1   <none>           <none>
+# kube-system   coredns-787d4945fb-qfkqf        1/1     Running   0          3m58s   10.88.0.3       tost1   <none>           <none>
+# kube-system   etcd-tost1                      1/1     Running   0          4m5s    172.27.23.205   tost1   <none>           <none>
+# kube-system   kube-apiserver-tost1            1/1     Running   0          4m4s    172.27.23.205   tost1   <none>           <none>
+# kube-system   kube-controller-manager-tost1   1/1     Running   0          4m4s    172.27.23.205   tost1   <none>           <none>
+# kube-system   kube-proxy-g7j9l                1/1     Running   0          3m58s   172.27.23.205   tost1   <none>           <none>
+# kube-system   kube-scheduler-tost1            1/1     Running   0          4m4s    172.27.23.205   tost1   <none>           <none>
 ```
 
 각 리소스에 대한 상태는 다음 명령어들을 사용해서 확인해볼 수 있다.
@@ -266,27 +311,26 @@ kubectl describe po kube-scheduler-tost -n kube-system
 혹은 `-n|--namespace`을 사용하지 않으면
 `default` 네임스페이스만 조회하기 때문에 리소스가 보이지 않을 수 있다.
 
-```sh
-kubectl get po -A
-# NAMESPACE     NAME                           READY   STATUS              RESTARTS         AGE
-# kube-system   coredns-787d4945fb-q9xc4       0/1     ContainerCreating   0                6m34s
-# kube-system   coredns-787d4945fb-qlsl6       0/1     ContainerCreating   0                6m34s
-# kube-system   etcd-tost                      1/1     Running             7 (7m28s ago)    5m48s
-# kube-system   kube-apiserver-tost            1/1     Running             10 (6m58s ago)   7m30s
-# kube-system   kube-controller-manager-tost   1/1     Running             12 (2m55s ago)   7m30s
-# kube-system   kube-proxy-4zc6l               1/1     Running             4 (89s ago)      6m34s
-# kube-system   kube-scheduler-tost            0/1     CrashLoopBackOff    12 (44s ago)     5m45s
-```
-
-pod가 정상 동작할 수 있도록
+~~pod가 정상 동작할 수 있도록
 네트워크 구성을 위한 CNI를 설정해야 한다.
-여기서는 Calico를 사용한다.
+여기서는 Calico를 사용한다.~~
+
+v1.24 이후부터(정확하지 않음)는 CNI 플러그인을 설정하지 않아도 CoreDNS가 Pending이 아닌 Running 상태가 된다.
+하지만 결국 pod를 생성하고 네트워크 인터페이스를 할당하려면 CNI 플러그인이 필요하다.
 
 - [Install Calico CNI](https://docs.projectcalico.org/getting-started/kubernetes/self-managed-onprem/onpremises)
 
 ```sh
 # kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
 kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico-typha.yaml
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/custom-resources.yaml
+# kubectl delete -f $URL
+```
+
+```sh
+# Terminating 상태인 pod를 삭제하려면
+# https://www.ibm.com/docs/ko/cloud-private/3.2.x?topic=console-pod-is-stuck-in-terminating-state
+kubectl -n kube-system delete pod --grace-period=0 --force $POD_NAME
 ```
 
 ```sh
@@ -305,10 +349,20 @@ crictl ps
 
 ### 1개의 노드
 
-노드가 컨트롤 플레인 노드를 포함해서 하나뿐이라면 아래 명령어를 실행한다.
+노드가 컨트롤 플레인 노드를 포함해서 하나뿐이라면 taint 해야 한다.
 
 ```sh
-kubectl taint nodes --all node-role.kubernetes.io/master-
+kubectl get ev -n kube-system
+# LAST SEEN   TYPE      REASON              OBJECT                          MESSAGE
+# 96s         Warning   FailedScheduling    pod/coredns-64897985d-6drrs     0/1 nodes are available: 1 node(s) had taint {node.kubernetes.io/not-ready: }, that the pod didn't tolerate.
+```
+
+```sh
+kubectl taint node --all node-role.kubernetes.io/master-
+```
+
+```sh
+kubectl describe node -l node-role.kubernetes.io/master
 ```
 
 ### etc
